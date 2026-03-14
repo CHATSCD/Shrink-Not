@@ -195,27 +195,20 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
 /* LOGIN */
 
-async function login(){
+async function login(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email,
+    password: password
+  })
 
-const user = document.getElementById("loginUser").value
-const pass = document.getElementById("loginPass").value
+  if (error) {
+    alert(error.message)
+    return
+  }
 
-const { data } = await sb
-.from("app_users")
-.select("*")
-.eq("username", user)
-.eq("password", pass)
-.single()
-
-if(!data){
-
-alert("Login Failed")
-return
-
+  document.getElementById("loginScreen").style.display = "none"
+  document.getElementById("app").style.display = "block"
 }
-
-document.getElementById("loginScreen").classList.add("hidden")
-document.getElementById("appScreen").classList.remove("hidden")
 
 loadStores()
 loadAnalytics()
