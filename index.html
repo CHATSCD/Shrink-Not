@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 
 <meta charset="UTF-8">
@@ -16,18 +15,15 @@
 
 <body class="bg-gray-100">
 
-<!-- LOGIN SCREEN -->
+<!-- LOGIN -->
 
 <div id="loginScreen" class="flex items-center justify-center h-screen">
 
 <div class="bg-white p-6 rounded shadow w-80">
 
-<h1 class="text-xl font-bold text-center mb-4">
-Shrink Shield
-</h1>
+<h1 class="text-xl font-bold text-center mb-4">Shrink Shield</h1>
 
 <input id="loginUser" placeholder="Username" class="border p-2 w-full mb-2">
-
 <input id="loginPass" type="password" placeholder="Password" class="border p-2 w-full mb-4">
 
 <button onclick="login()" class="bg-blue-600 text-white w-full p-2 rounded">
@@ -35,35 +31,44 @@ Sign In
 </button>
 
 </div>
+</div>
+
+
+<!-- APP -->
+
+<div id="appScreen" class="hidden">
+
+<!-- NAV BAR -->
+
+<div class="bg-black text-white p-3 flex gap-4">
+
+<button onclick="showPage('scanner')">Scanner</button>
+<button onclick="showPage('manual')">Manual</button>
+<button onclick="showPage('inventory')">Inventory</button>
+<button onclick="showPage('analytics')">Analytics</button>
+<button onclick="showPage('admin')">Admin</button>
 
 </div>
 
 
-<!-- MAIN APP -->
+<div class="p-4 space-y-4">
 
-<div id="appScreen" class="hidden p-4 space-y-4">
-
-<h1 class="text-xl font-bold">
-Shrink Shield Dashboard
-</h1>
-
-
-<!-- STORE SELECT -->
+<!-- STORE -->
 
 <div class="bg-white p-4 rounded shadow">
-
-<h2 class="font-semibold mb-2">Store</h2>
 
 <select id="storeSelect" class="border p-2 w-full"></select>
 
 </div>
 
 
-<!-- BARCODE SCANNER -->
+<!-- SCANNER PAGE -->
+
+<div id="scannerPage">
 
 <div class="bg-white p-4 rounded shadow">
 
-<h2 class="font-semibold mb-2">Barcode Scanner</h2>
+<h2 class="font-bold mb-2">Scanner</h2>
 
 <video id="scanner" class="w-full rounded"></video>
 
@@ -71,67 +76,118 @@ Shrink Shield Dashboard
 Start Scanner
 </button>
 
-</div>
+<input id="barcodeResult" class="border p-2 w-full mt-2">
 
+<input id="scanQty" type="number" value="1" class="border p-2 w-full mt-2">
 
-<!-- SCAN / MANUAL ENTRY -->
-
-<div class="bg-white p-4 rounded shadow">
-
-<h2 class="font-semibold mb-2">Scan / Manual Entry</h2>
-
-<input id="barcodeResult" placeholder="Scan or type barcode" class="border p-2 w-full">
-
-<button onclick="manualLookup()" class="mt-2 bg-gray-600 text-white px-4 py-1 rounded">
-Lookup Item
-</button>
-
-<input id="itemName" placeholder="Item Name" class="border p-2 w-full mt-2">
-
-<input id="itemPrice" placeholder="Price" class="border p-2 w-full mt-2">
-
-<input id="itemQty" type="number" value="1" class="border p-2 w-full mt-2">
-
-<div id="itemInfo" class="mt-2 text-gray-700">
-No item scanned
-</div>
-
-</div>
-
-
-<!-- SAVE -->
-
-<div class="bg-white p-4 rounded shadow">
-
-<button onclick="saveShift()" class="bg-blue-600 text-white px-4 py-2 rounded">
+<button onclick="saveScan()" class="mt-2 bg-blue-600 text-white px-4 py-2 rounded">
 Save Scan
 </button>
 
 </div>
 
+</div>
 
-<!-- ANALYTICS -->
+
+<!-- MANUAL PAGE -->
+
+<div id="manualPage" class="hidden">
 
 <div class="bg-white p-4 rounded shadow">
 
-<h2 class="font-semibold mb-2">Analytics</h2>
+<h2 class="font-bold mb-2">Manual Entry</h2>
 
-<div id="analyticsBox">
-Loading...
+<input id="manualBarcode" placeholder="Barcode" class="border p-2 w-full mb-2">
+
+<input id="manualName" placeholder="Item Name" class="border p-2 w-full mb-2">
+
+<input id="manualPrice" placeholder="Price" class="border p-2 w-full mb-2">
+
+<input id="manualQty" type="number" value="1" class="border p-2 w-full mb-2">
+
+<button onclick="saveManual()" class="bg-blue-600 text-white px-4 py-2 rounded">
+Save Item
+</button>
+
+</div>
+
+</div>
+
+
+<!-- INVENTORY PAGE -->
+
+<div id="inventoryPage" class="hidden">
+
+<div class="bg-white p-4 rounded shadow">
+
+<h2 class="font-bold mb-2">Inventory</h2>
+
+<table class="w-full">
+
+<thead>
+<tr class="border-b">
+<th>Barcode</th>
+<th>Name</th>
+<th>Qty</th>
+</tr>
+</thead>
+
+<tbody id="inventoryTable"></tbody>
+
+</table>
+
+<button onclick="loadInventory()" class="mt-3 bg-gray-700 text-white px-3 py-1 rounded">
+Refresh
+</button>
+
+</div>
+
+</div>
+
+
+<!-- ANALYTICS PAGE -->
+
+<div id="analyticsPage" class="hidden">
+
+<div class="bg-white p-4 rounded shadow">
+
+<h2 class="font-bold mb-2">Analytics</h2>
+
+<div id="analyticsBox"></div>
+
+</div>
+
+</div>
+
+
+<!-- ADMIN PAGE -->
+
+<div id="adminPage" class="hidden">
+
+<div class="bg-white p-4 rounded shadow">
+
+<h2 class="font-bold mb-2">Admin Panel</h2>
+
+<button onclick="loadInventory()" class="bg-purple-600 text-white px-3 py-1 rounded">
+Load Inventory
+</button>
+
 </div>
 
 </div>
 
 </div>
+</div>
+
 
 
 <script>
 
-/* SUPABASE CONNECTION */
+/* SUPABASE */
 
 const SUPABASE_URL = "https://ylfsqjbqhewpfiooytlg.supabase.co"
 
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsZnNxamJxaGV3cGZpb295dGxnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NzQwODQsImV4cCI6MjA4ODM1MDA4NH0.Ssl5J6ktZIVtLd2cq8vH7PWdR4-yZwI5tt4PtXkVqWk"
+const SUPABASE_KEY = "YOUR_KEY"
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
@@ -168,6 +224,19 @@ loadAnalytics()
 
 
 
+/* NAVIGATION */
+
+function showPage(page){
+
+document.querySelectorAll("[id$='Page']")
+.forEach(p=>p.classList.add("hidden"))
+
+document.getElementById(page+"Page").classList.remove("hidden")
+
+}
+
+
+
 /* LOAD STORES */
 
 async function loadStores(){
@@ -180,10 +249,10 @@ select.innerHTML=""
 
 data.forEach(store=>{
 
-const option = document.createElement("option")
+const option=document.createElement("option")
 
-option.value = store.id
-option.text = store.name
+option.value=store.id
+option.text=store.name
 
 select.appendChild(option)
 
@@ -193,60 +262,17 @@ select.appendChild(option)
 
 
 
-/* BARCODE SCANNER */
+/* SCANNER */
 
-const codeReader = new ZXing.BrowserBarcodeReader()
+const codeReader=new ZXing.BrowserBarcodeReader()
 
 async function startScanner(){
 
-const video = document.getElementById("scanner")
+const video=document.getElementById("scanner")
 
-const result = await codeReader.decodeOnceFromVideoDevice(undefined,video)
+const result=await codeReader.decodeOnceFromVideoDevice(undefined,video)
 
-document.getElementById("barcodeResult").value = result.text
-
-lookupItem(result.text)
-
-}
-
-
-
-/* MANUAL LOOKUP */
-
-async function manualLookup(){
-
-const barcode = document.getElementById("barcodeResult").value
-
-lookupItem(barcode)
-
-}
-
-
-
-/* LOOKUP ITEM */
-
-async function lookupItem(barcode){
-
-const {data} = await sb
-.from("items")
-.select("*")
-.eq("barcode",barcode)
-.single()
-
-if(data){
-
-document.getElementById("itemName").value = data.name
-document.getElementById("itemPrice").value = data.price
-
-document.getElementById("itemInfo").innerText =
-data.name + " - $" + data.price
-
-}else{
-
-document.getElementById("itemInfo").innerText =
-"Item not found — you can add it manually"
-
-}
+document.getElementById("barcodeResult").value=result.text
 
 }
 
@@ -254,29 +280,75 @@ document.getElementById("itemInfo").innerText =
 
 /* SAVE SCAN */
 
-async function saveShift(){
+async function saveScan(){
 
-const store = document.getElementById("storeSelect").value
-const barcode = document.getElementById("barcodeResult").value
-const name = document.getElementById("itemName").value
-const price = document.getElementById("itemPrice").value
-const qty = document.getElementById("itemQty").value
+const store=document.getElementById("storeSelect").value
+const barcode=document.getElementById("barcodeResult").value
+const qty=document.getElementById("scanQty").value
 
 await sb.from("shift_logs").insert({
 
-id: crypto.randomUUID(),
-store: store,
-barcode: barcode,
-name: name,
-price: price,
-qty: qty,
-date: new Date().toISOString()
+id:crypto.randomUUID(),
+store:store,
+barcode:barcode,
+qty:qty,
+date:new Date().toISOString()
 
 })
 
-alert("Scan Saved")
+alert("Saved")
 
 loadAnalytics()
+
+}
+
+
+
+/* MANUAL SAVE */
+
+async function saveManual(){
+
+const barcode=document.getElementById("manualBarcode").value
+const name=document.getElementById("manualName").value
+const price=document.getElementById("manualPrice").value
+const qty=document.getElementById("manualQty").value
+
+await sb.from("items").insert({
+
+barcode:barcode,
+name:name,
+price:price,
+qty:qty
+
+})
+
+alert("Item Added")
+
+}
+
+
+
+/* LOAD INVENTORY */
+
+async function loadInventory(){
+
+const {data}=await sb.from("items").select("*")
+
+let table=document.getElementById("inventoryTable")
+
+table.innerHTML=""
+
+data.forEach(i=>{
+
+table.innerHTML+=`
+<tr>
+<td>${i.barcode}</td>
+<td>${i.name}</td>
+<td>${i.qty || 0}</td>
+</tr>
+`
+
+})
 
 }
 
@@ -286,12 +358,10 @@ loadAnalytics()
 
 async function loadAnalytics(){
 
-const {data} = await sb
-.from("shift_logs")
-.select("*")
+const {data}=await sb.from("shift_logs").select("*")
 
-document.getElementById("analyticsBox").innerText =
-"Total Scans Logged: " + data.length
+document.getElementById("analyticsBox").innerText=
+"Total Scans Logged: "+data.length
 
 }
 
