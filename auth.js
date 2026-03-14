@@ -11,14 +11,14 @@ e.preventDefault();
 const user = document.getElementById("loginUser").value;
 const pass = document.getElementById("loginPass").value;
 
-const { data } = await sb
+const { data, error } = await sb
 .from("app_users")
 .select("*")
 .eq("username", user)
 .eq("password", pass)
 .single();
 
-if(!data){
+if(error || !data){
 alert("Login failed");
 return;
 }
