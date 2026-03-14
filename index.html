@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -73,13 +74,23 @@ Start Scanner
 </div>
 
 
-<!-- SCAN RESULT -->
+<!-- SCAN / MANUAL ENTRY -->
 
 <div class="bg-white p-4 rounded shadow">
 
-<h2 class="font-semibold mb-2">Scan Result</h2>
+<h2 class="font-semibold mb-2">Scan / Manual Entry</h2>
 
-<input id="barcodeResult" class="border p-2 w-full">
+<input id="barcodeResult" placeholder="Scan or type barcode" class="border p-2 w-full">
+
+<button onclick="manualLookup()" class="mt-2 bg-gray-600 text-white px-4 py-1 rounded">
+Lookup Item
+</button>
+
+<input id="itemName" placeholder="Item Name" class="border p-2 w-full mt-2">
+
+<input id="itemPrice" placeholder="Price" class="border p-2 w-full mt-2">
+
+<input id="itemQty" type="number" value="1" class="border p-2 w-full mt-2">
 
 <div id="itemInfo" class="mt-2 text-gray-700">
 No item scanned
@@ -88,7 +99,7 @@ No item scanned
 </div>
 
 
-<!-- SAVE SHIFT -->
+<!-- SAVE -->
 
 <div class="bg-white p-4 rounded shadow">
 
@@ -112,7 +123,6 @@ Loading...
 </div>
 
 </div>
-
 
 
 <script>
@@ -201,6 +211,18 @@ lookupItem(result.text)
 
 
 
+/* MANUAL LOOKUP */
+
+async function manualLookup(){
+
+const barcode = document.getElementById("barcodeResult").value
+
+lookupItem(barcode)
+
+}
+
+
+
 /* LOOKUP ITEM */
 
 async function lookupItem(barcode){
@@ -213,13 +235,16 @@ const {data} = await sb
 
 if(data){
 
+document.getElementById("itemName").value = data.name
+document.getElementById("itemPrice").value = data.price
+
 document.getElementById("itemInfo").innerText =
 data.name + " - $" + data.price
 
 }else{
 
 document.getElementById("itemInfo").innerText =
-"Item not found"
+"Item not found — you can add it manually"
 
 }
 
@@ -233,15 +258,18 @@ async function saveShift(){
 
 const store = document.getElementById("storeSelect").value
 const barcode = document.getElementById("barcodeResult").value
+const name = document.getElementById("itemName").value
+const price = document.getElementById("itemPrice").value
+const qty = document.getElementById("itemQty").value
 
 await sb.from("shift_logs").insert({
 
 id: crypto.randomUUID(),
-
 store: store,
-
 barcode: barcode,
-
+name: name,
+price: price,
+qty: qty,
 date: new Date().toISOString()
 
 })
