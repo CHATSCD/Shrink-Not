@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Shrink Shield — Keith's Superstores</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<link rel="stylesheet" href="styles.css">
+
+</head>
+
+<body>
+
+<div id="loginScreen" class="fixed inset-0 flex items-center justify-center bg-blue-900">
+
+<div class="bg-white rounded-xl shadow-xl p-8 w-80">
+
+<h1 class="text-xl font-black text-center mb-4">
+SHRINK SHIELD
+</h1>
+
+<form onsubmit="doLogin(event)">
+
+<label class="lbl">Username</label>
+<input id="loginUser" class="inp w-full">
+
+<label class="lbl mt-2">Password</label>
+<input id="loginPass" type="password" class="inp w-full">
+
+<button class="btn-primary mt-4 w-full">
+Sign In
+</button>
+
+</form>
+
+</div>
+</div>
+
+<div id="appScreen" class="hidden">
+
+<header class="app-header">
+
+<h1 class="app-title">
+Shrink Shield
+</h1>
+
+<select id="storeSelect"></select>
+
+</header>
+
+<div class="app-main">
+
+<div class="tabs">
+
+<button onclick="showTab('count')" class="tab-btn active">COUNT</button>
+<button onclick="showTab('review')" class="tab-btn">REVIEW</button>
+<button onclick="showTab('log')" class="tab-btn">LOG</button>
+<button onclick="showTab('analytics')" class="tab-btn">ANALYTICS</button>
+<button onclick="showTab('admin')" class="tab-btn">ADMIN</button>
+
+</div>
+
+<div id="tab-count">
+
+<h2 class="section-title">Shift Count</h2>
+
+<table class="table">
+
+<thead>
+<tr>
+<th>Product</th>
+<th>Begin</th>
+<th>Sales</th>
+<th>End</th>
+<th>Variance</th>
+</tr>
+</thead>
+
+<tbody id="kratomBody"></tbody>
+
+</table>
+
+<button onclick="submitCount()" class="btn-primary mt-4">
+Submit Shift Count
+</button>
+
+</div>
+
+<div id="tab-review" class="hidden">
+<h2 class="section-title">Last Shift</h2>
+<div id="reviewContent"></div>
+</div>
+
+<div id="tab-log" class="hidden">
+<h2 class="section-title">Shift History</h2>
+<div id="logContent"></div>
+</div>
+
+<div id="tab-analytics" class="hidden">
+
+<h2 class="section-title">Analytics</h2>
+
+<canvas id="chartBar"></canvas>
+
+</div>
+
+<div id="tab-admin" class="hidden">
+
+<h2 class="section-title">Users</h2>
+
+<div id="usersTable"></div>
+
+</div>
+
+</div>
+
+<footer class="footer">
+Keith's Superstores
+</footer>
+
+</div>
+
+<script src="auth.js"></script>
+<script src="app.js"></script>
+<script src="analytics.js"></script>
+<script src="admin.js"></script>
+
+</body>
+</html>
