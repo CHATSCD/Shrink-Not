@@ -1,134 +1,273 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Shrink Shield — Keith's Superstores</title>
+<title>Shrink Shield</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
-<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/@zxing/library@latest"></script>
 
 </head>
 
-<body>
+<body class="bg-gray-100">
 
-<div id="loginScreen" class="fixed inset-0 flex items-center justify-center bg-blue-900">
+<!-- LOGIN SCREEN -->
 
-<div class="bg-white rounded-xl shadow-xl p-8 w-80">
+<div id="loginScreen" class="flex items-center justify-center h-screen">
 
-<h1 class="text-xl font-black text-center mb-4">
-SHRINK SHIELD
-</h1>
+<div class="bg-white p-6 rounded shadow w-80">
 
-<form onsubmit="doLogin(event)">
-
-<label class="lbl">Username</label>
-<input id="loginUser" class="inp w-full">
-
-<label class="lbl mt-2">Password</label>
-<input id="loginPass" type="password" class="inp w-full">
-
-<button class="btn-primary mt-4 w-full">
-Sign In
-</button>
-
-</form>
-
-</div>
-</div>
-
-<div id="appScreen" class="hidden">
-
-<header class="app-header">
-
-<h1 class="app-title">
+<h1 class="text-xl font-bold text-center mb-4">
 Shrink Shield
 </h1>
 
-<select id="storeSelect"></select>
+<input id="loginUser" placeholder="Username" class="border p-2 w-full mb-2">
 
-</header>
+<input id="loginPass" type="password" placeholder="Password" class="border p-2 w-full mb-4">
 
-<div class="app-main">
-
-<div class="tabs">
-
-<button onclick="showTab('count')" class="tab-btn active">COUNT</button>
-<button onclick="showTab('review')" class="tab-btn">REVIEW</button>
-<button onclick="showTab('log')" class="tab-btn">LOG</button>
-<button onclick="showTab('analytics')" class="tab-btn">ANALYTICS</button>
-<button onclick="showTab('admin')" class="tab-btn">ADMIN</button>
-
-</div>
-
-<div id="tab-count">
-
-<h2 class="section-title">Shift Count</h2>
-
-<table class="table">
-
-<thead>
-<tr>
-<th>Product</th>
-<th>Begin</th>
-<th>Sales</th>
-<th>End</th>
-<th>Variance</th>
-</tr>
-</thead>
-
-<tbody id="kratomBody"></tbody>
-
-</table>
-
-<button onclick="submitCount()" class="btn-primary mt-4">
-Submit Shift Count
+<button onclick="login()" class="bg-blue-600 text-white w-full p-2 rounded">
+Sign In
 </button>
 
 </div>
 
-<div id="tab-review" class="hidden">
-<h2 class="section-title">Last Shift</h2>
-<div id="reviewContent"></div>
 </div>
 
-<div id="tab-log" class="hidden">
-<h2 class="section-title">Shift History</h2>
-<div id="logContent"></div>
-</div>
 
-<div id="tab-analytics" class="hidden">
+<!-- MAIN APP -->
 
-<h2 class="section-title">Analytics</h2>
+<div id="appScreen" class="hidden p-4 space-y-4">
 
-<canvas id="chartBar"></canvas>
+<h1 class="text-xl font-bold">
+Shrink Shield Dashboard
+</h1>
 
-</div>
 
-<div id="tab-admin" class="hidden">
+<!-- STORE SELECT -->
 
-<h2 class="section-title">Users</h2>
+<div class="bg-white p-4 rounded shadow">
 
-<div id="usersTable"></div>
+<h2 class="font-semibold mb-2">Store</h2>
+
+<select id="storeSelect" class="border p-2 w-full"></select>
 
 </div>
 
+
+<!-- BARCODE SCANNER -->
+
+<div class="bg-white p-4 rounded shadow">
+
+<h2 class="font-semibold mb-2">Barcode Scanner</h2>
+
+<video id="scanner" class="w-full rounded"></video>
+
+<button onclick="startScanner()" class="mt-2 bg-green-600 text-white px-4 py-2 rounded">
+Start Scanner
+</button>
+
 </div>
 
-<footer class="footer">
-Keith's Superstores
-</footer>
+
+<!-- SCAN RESULT -->
+
+<div class="bg-white p-4 rounded shadow">
+
+<h2 class="font-semibold mb-2">Scan Result</h2>
+
+<input id="barcodeResult" class="border p-2 w-full">
+
+<div id="itemInfo" class="mt-2 text-gray-700">
+No item scanned
+</div>
 
 </div>
 
-<script src="auth.js"></script>
-<script src="app.js"></script>
-<script src="analytics.js"></script>
-<script src="admin.js"></script>
+
+<!-- SAVE SHIFT -->
+
+<div class="bg-white p-4 rounded shadow">
+
+<button onclick="saveShift()" class="bg-blue-600 text-white px-4 py-2 rounded">
+Save Scan
+</button>
+
+</div>
+
+
+<!-- ANALYTICS -->
+
+<div class="bg-white p-4 rounded shadow">
+
+<h2 class="font-semibold mb-2">Analytics</h2>
+
+<div id="analyticsBox">
+Loading...
+</div>
+
+</div>
+
+</div>
+
+
+
+<script>
+
+/* SUPABASE CONNECTION */
+
+const SUPABASE_URL = "https://ylfsqjbqhewpfiooytlg.supabase.co"
+
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsZnNxamJxaGV3cGZpb295dGxnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NzQwODQsImV4cCI6MjA4ODM1MDA4NH0.Ssl5J6ktZIVtLd2cq8vH7PWdR4-yZwI5tt4PtXkVqWk"
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+
+
+
+/* LOGIN */
+
+async function login(){
+
+const user = document.getElementById("loginUser").value
+const pass = document.getElementById("loginPass").value
+
+const { data } = await sb
+.from("app_users")
+.select("*")
+.eq("username", user)
+.eq("password", pass)
+.single()
+
+if(!data){
+
+alert("Login Failed")
+return
+
+}
+
+document.getElementById("loginScreen").classList.add("hidden")
+document.getElementById("appScreen").classList.remove("hidden")
+
+loadStores()
+loadAnalytics()
+
+}
+
+
+
+/* LOAD STORES */
+
+async function loadStores(){
+
+const {data} = await sb.from("stores").select("*")
+
+const select = document.getElementById("storeSelect")
+
+select.innerHTML=""
+
+data.forEach(store=>{
+
+const option = document.createElement("option")
+
+option.value = store.id
+option.text = store.name
+
+select.appendChild(option)
+
+})
+
+}
+
+
+
+/* BARCODE SCANNER */
+
+const codeReader = new ZXing.BrowserBarcodeReader()
+
+async function startScanner(){
+
+const video = document.getElementById("scanner")
+
+const result = await codeReader.decodeOnceFromVideoDevice(undefined,video)
+
+document.getElementById("barcodeResult").value = result.text
+
+lookupItem(result.text)
+
+}
+
+
+
+/* LOOKUP ITEM */
+
+async function lookupItem(barcode){
+
+const {data} = await sb
+.from("items")
+.select("*")
+.eq("barcode",barcode)
+.single()
+
+if(data){
+
+document.getElementById("itemInfo").innerText =
+data.name + " - $" + data.price
+
+}else{
+
+document.getElementById("itemInfo").innerText =
+"Item not found"
+
+}
+
+}
+
+
+
+/* SAVE SCAN */
+
+async function saveShift(){
+
+const store = document.getElementById("storeSelect").value
+const barcode = document.getElementById("barcodeResult").value
+
+await sb.from("shift_logs").insert({
+
+id: crypto.randomUUID(),
+
+store: store,
+
+barcode: barcode,
+
+date: new Date().toISOString()
+
+})
+
+alert("Scan Saved")
+
+loadAnalytics()
+
+}
+
+
+
+/* ANALYTICS */
+
+async function loadAnalytics(){
+
+const {data} = await sb
+.from("shift_logs")
+.select("*")
+
+document.getElementById("analyticsBox").innerText =
+"Total Scans Logged: " + data.length
+
+}
+
+</script>
 
 </body>
 </html>
