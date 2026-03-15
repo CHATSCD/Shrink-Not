@@ -1,1171 +1,364 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shrink Shield — Keith's Superstores</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-<style>
-  :root{--kb:#003087;--kr:#C8102E;}
-  body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;}
-  .tab-btn{transition:all .2s;}
-  .tab-btn.active{background:#003087;color:#fff;border-bottom:3px solid #C8102E;}
-  .tab-btn:not(.active):hover{background:#e2e8f0;}
-  .sub-btn{transition:all .15s;border-bottom:2px solid transparent;}
-  .sub-btn.active{color:#003087;border-bottom:2px solid #003087;font-weight:700;}
-  .badge-g{background:#dcfce7;color:#166534;}
-  .badge-y{background:#fef9c3;color:#854d0e;}
-  .badge-r{background:#fee2e2;color:#991b1b;}
-  .badge-b{background:#dbeafe;color:#1e40af;}
-  .flag-row{background:#fff1f2!important;}
-  input[type=number]{-moz-appearance:textfield;}
-  input[type=number]::-webkit-outer-spin-button,
-  input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
-  .chart-wrap{position:relative;height:250px;}
-  table{border-collapse:collapse;}
-  thead tr{border-bottom:2px solid #003087;}
-  tbody tr{border-bottom:1px solid #e5e7eb;}
-  tbody tr:hover{background:#f8fafc;}
-  select{background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");background-repeat:no-repeat;background-position:right .5rem center;background-size:12px;padding-right:2rem!important;appearance:none;}
-  .num-inp{width:70px;border:1px solid #d1d5db;border-radius:6px;padding:4px 6px;font-size:13px;text-align:center;outline:none;}
-  .num-inp:focus{border-color:#003087;}
-  .lbl{display:block;font-size:10px;font-weight:700;color:#6b7280;letter-spacing:.05em;margin-bottom:2px;}
-  .inp{display:block;border:1px solid #d1d5db;border-radius:6px;padding:5px 8px;font-size:13px;outline:none;}
-  .inp:focus{border-color:#003087;}
-</style>
-</head>
-<body>
 
-<!-- LOGIN SCREEN (identical to previous) -->
-<div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center" style="background:#003087;">
-  <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm mx-4">
-    <div class="text-center mb-6">
-      <img src="logo.png" onerror="this.style.display='none'" class="h-20 mx-auto mb-2 rounded" id="loginLogo">
-      <div class="mb-2">
-        <div style="color:#003087;font-weight:900;font-size:22px;letter-spacing:2px;">KEITH'S</div>
-        <div style="color:#C8102E;font-weight:900;font-size:14px;letter-spacing:1px;">SUPERSTORES</div>
-      </div>
-      <div class="text-xl font-black tracking-widest text-gray-800">SHRINK SHIELD</div>
-      <div class="text-xs text-gray-400 mt-0.5">Loss Prevention System</div>
-    </div>
-    <form onsubmit="doLogin(event)" class="space-y-3">
-      <div>
-        <label class="lbl">USERNAME</label>
-        <input id="loginUser" type="text" autocomplete="username" placeholder="Enter username"
-          class="inp w-full" autofocus>
-      </div>
-      <div>
-        <label class="lbl">PASSWORD</label>
-        <input id="loginPass" type="password" autocomplete="current-password" placeholder="Enter password"
-          class="inp w-full">
-      </div>
-      <div id="loginError" class="hidden text-red-600 text-sm text-center bg-red-50 rounded p-2"></div>
-      <button type="submit" style="background:#003087;"
-        class="w-full py-2.5 rounded-lg text-white font-bold text-sm hover:opacity-90 transition mt-1">
-        Sign In
-      </button>
-    </form>
-    <div class="text-center text-xs text-gray-400 mt-4">v5.0 · Keith's Superstores</div>
-  </div>
+<title>Shrink Shield</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/@zxing/library@latest"></script>
+
+</head>
+
+<body class="bg-gray-100">
+
+<!-- LOGIN -->
+
+<div id="loginScreen" class="flex items-center justify-center h-screen">
+
+<div class="bg-white p-6 rounded shadow w-80">
+
+<h1 class="text-xl font-bold text-center mb-4">Shrink Shield</h1>
+
+<input id="loginUser" placeholder="Username" class="border p-2 w-full mb-2">
+<input id="loginPass" type="password" placeholder="Password" class="border p-2 w-full mb-4">
+
+<button onclick="login()" class="bg-blue-600 text-white w-full p-2 rounded">
+Sign In
+</button>
+
+</div>
 </div>
 
-<!-- APP SCREEN -->
+
+<!-- APP -->
+
 <div id="appScreen" class="hidden">
 
-<!-- HEADER -->
-<header style="background:#003087;" class="shadow-lg sticky top-0 z-50">
-  <div class="max-w-7xl mx-auto px-3 py-2 flex flex-wrap items-center gap-2">
-    <div class="flex items-center gap-2 flex-shrink-0">
-      <img src="logo.png" onerror="this.style.display='none';document.getElementById('logoText').classList.remove('hidden');" class="h-10 rounded">
-      <div id="logoText" class="hidden bg-white rounded px-1.5 py-0.5 text-center leading-tight">
-        <div style="color:#003087;font-weight:900;font-size:10px;letter-spacing:.5px;">KEITH'S</div>
-        <div style="color:#C8102E;font-weight:900;font-size:8px;letter-spacing:.3px;">SUPERSTORES</div>
-      </div>
-      <div>
-        <div class="text-lg font-black tracking-widest text-white">SHRINK SHIELD</div>
-        <div class="text-xs text-blue-200 leading-tight">Loss Prevention System</div>
-      </div>
-    </div>
-    <div class="flex items-center gap-2 ml-auto flex-wrap">
-      <div id="userChip" class="hidden flex items-center gap-1.5 bg-blue-800 rounded-full px-3 py-1"></div>
-      <select id="storeSelect" onchange="onStoreChange()"
-        class="text-xs bg-blue-900 text-white border border-blue-700 rounded px-2 py-1.5 w-64"></select>
-      <div id="hdrClock" class="text-xs text-blue-200 hidden sm:block text-right"></div>
-    </div>
-  </div>
-</header>
+<!-- NAV BAR -->
 
-<!-- MAIN -->
-<div class="max-w-7xl mx-auto px-3 pt-3 pb-10">
+<div class="bg-black text-white p-3 flex gap-4">
 
-  <!-- Tab Bar -->
-  <div class="flex gap-1 bg-white rounded-t-xl shadow px-1 pt-1">
-    <button class="tab-btn active flex-1 py-2 px-1 rounded-t-lg text-xs font-bold" onclick="showTab('count')">COUNT</button>
-    <button class="tab-btn flex-1 py-2 px-1 rounded-t-lg text-xs font-bold" onclick="showTab('review')">REVIEW</button>
-    <button class="tab-btn flex-1 py-2 px-1 rounded-t-lg text-xs font-bold" onclick="showTab('log')">LOG</button>
-    <button class="tab-btn flex-1 py-2 px-1 rounded-t-lg text-xs font-bold" onclick="showTab('analytics')">ANALYTICS</button>
-    <button class="tab-btn flex-1 py-2 px-1 rounded-t-lg text-xs font-bold" onclick="showTab('stores')">STORES</button>
-    <button id="adminTabBtn" class="tab-btn hidden flex-1 py-2 px-1 rounded-t-lg text-xs font-bold" onclick="showTab('admin')">ADMIN</button>
-  </div>
+<button onclick="showPage('scanner')">Scanner</button>
+<button onclick="showPage('manual')">Manual</button>
+<button onclick="showPage('inventory')">Inventory</button>
+<button onclick="showPage('analytics')">Analytics</button>
+<button onclick="showPage('admin')">Admin</button>
 
-  <div class="bg-white rounded-b-xl shadow-lg p-4">
+</div>
 
-  <!-- ========== COUNT TAB ========== -->
-  <div id="tab-count">
-    <!-- Sub-tabs: Start Shift / End Shift -->
-    <div class="flex gap-4 border-b mb-4">
-      <button class="sub-btn active pb-2 text-sm" id="countSubStart" onclick="showCountSub('start')">START SHIFT</button>
-      <button class="sub-btn pb-2 text-sm text-gray-500" id="countSubEnd" onclick="showCountSub('end')">END SHIFT</button>
-    </div>
 
-    <!-- START SHIFT PANEL -->
-    <div id="sub-start">
-      <div class="flex flex-wrap gap-2 mb-4 items-end">
-        <div><label class="lbl">SHIFT</label>
-          <select id="startShiftSel" class="inp w-32">
-            <option>Morning</option><option>Afternoon</option><option>Evening</option><option>Night</option>
-          </select>
-        </div>
-        <div><label class="lbl">DATE</label>
-          <input id="startDate" type="date" class="inp w-36">
-        </div>
-        <div><label class="lbl">INCOMING CLERK</label>
-          <input id="startClerk" type="text" placeholder="Name" class="inp w-36">
-        </div>
-        <div class="ml-auto">
-          <button onclick="startShift()" style="background:#003087;"
-            class="px-4 py-1.5 rounded text-sm font-bold text-white hover:opacity-90">Start Shift</button>
-        </div>
-      </div>
+<div class="p-4 space-y-4">
 
-      <div class="text-xs bg-blue-50 border border-blue-200 rounded p-2.5 mb-3 text-gray-600">
-        Enter beginning counts for each kratom product (Office and Sales Floor). Cases = 12 bottles.
-      </div>
+<!-- STORE -->
 
-      <!-- Kratom begin table -->
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead><tr class="text-xs text-gray-500 text-left">
-            <th class="pb-2 pr-3">PRODUCT</th>
-            <th class="pb-2 px-2 text-center" colspan="2">OFFICE</th>
-            <th class="pb-2 px-2 text-center" colspan="2">SALES FLOOR</th>
-          </tr><tr class="text-xs text-gray-400">
-            <th></th>
-            <th class="pb-2 px-2 text-center">Bottles</th>
-            <th class="pb-2 px-2 text-center">Cases</th>
-            <th class="pb-2 px-2 text-center">Bottles</th>
-            <th class="pb-2 px-2 text-center">Cases</th>
-          </tr></thead>
-          <tbody id="startKratomBody"></tbody>
-        </table>
-      </div>
-    </div>
+<div class="bg-white p-4 rounded shadow">
 
-    <!-- END SHIFT PANEL -->
-    <div id="sub-end" class="hidden">
-      <div class="flex flex-wrap gap-2 mb-4 items-end">
-        <div><label class="lbl">ACTIVE SHIFT</label>
-          <select id="endShiftSelect" class="inp w-64" onchange="loadActiveShift()">
-            <option value="">— Select a started shift —</option>
-          </select>
-        </div>
-        <div><label class="lbl">OUTGOING CLERK</label>
-          <input id="endClerk" type="text" placeholder="Name" class="inp w-36">
-        </div>
-        <div class="ml-auto">
-          <button onclick="completeShift()" style="background:#003087;"
-            class="px-4 py-1.5 rounded text-sm font-bold text-white hover:opacity-90">Complete Shift</button>
-        </div>
-      </div>
+<select id="storeSelect" class="border p-2 w-full"></select>
 
-      <div class="text-xs bg-yellow-50 border border-yellow-200 rounded p-2.5 mb-3 text-gray-600">
-        Enter end counts and bottles sold for each product. Variance = (begin total bottles – sales – end total bottles).
-      </div>
+</div>
 
-      <!-- Kratom end table -->
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead><tr class="text-xs text-gray-500 text-left">
-            <th class="pb-2 pr-3">PRODUCT</th>
-            <th class="pb-2 px-2 text-center" colspan="2">OFFICE (END)</th>
-            <th class="pb-2 px-2 text-center" colspan="2">FLOOR (END)</th>
-            <th class="pb-2 px-2 text-center">SALES<br><span class="font-normal">(bottles)</span></th>
-          </tr><tr class="text-xs text-gray-400">
-            <th></th>
-            <th class="pb-2 px-2 text-center">Bottles</th>
-            <th class="pb-2 px-2 text-center">Cases</th>
-            <th class="pb-2 px-2 text-center">Bottles</th>
-            <th class="pb-2 px-2 text-center">Cases</th>
-            <th></th>
-          </tr></thead>
-          <tbody id="endKratomBody"></tbody>
-        </table>
-      </div>
 
-      <!-- Lottery section (unchanged) -->
-      <div class="mt-6 border-t pt-4">
-        <h3 class="font-bold text-sm mb-2">Scratch‑Offs</h3>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead><tr class="text-xs text-gray-500 text-left">
-              <th class="pb-2 pr-3">GAME</th>
-              <th class="pb-2 px-2 text-center">OPEN</th>
-              <th class="pb-2 px-2 text-center">SALES</th>
-              <th class="pb-2 px-2 text-center">CLOSE</th>
-            </tr></thead>
-            <tbody id="endLotteryBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div><!-- /tab-count -->
+<!-- SCANNER PAGE -->
 
-  <!-- ========== REVIEW TAB ========== -->
-  <div id="tab-review" class="hidden">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="font-bold text-gray-700">Last Shift Review</h2>
-      <div class="flex gap-2">
-        <button class="sub-btn active text-sm pb-1" id="revTabK" onclick="showRevSub('kratom')">Kratom</button>
-        <button class="sub-btn text-sm pb-1 text-gray-500" id="revTabL" onclick="showRevSub('lottery')">Scratch-Offs</button>
-      </div>
-    </div>
-    <div id="reviewContent"></div>
-  </div>
+<div id="scannerPage">
 
-  <!-- ========== LOG TAB ========== -->
-  <div id="tab-log" class="hidden">
-    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-      <h2 class="font-bold text-gray-700">Shift History</h2>
-      <div class="flex gap-2">
-        <select id="logStore" class="border rounded px-2 py-1 text-xs" onchange="renderLog()">
-          <option value="">All Stores</option>
-        </select>
-        <select id="logType" class="border rounded px-2 py-1 text-xs" onchange="renderLog()">
-          <option value="">All Types</option>
-          <option value="kratom">Kratom Only</option>
-          <option value="lottery">Scratch-Off Only</option>
-        </select>
-      </div>
-    </div>
-    <div id="logContent"></div>
-  </div>
+<div class="bg-white p-4 rounded shadow">
 
-  <!-- ========== ANALYTICS TAB ========== -->
-  <div id="tab-analytics" class="hidden">
-    <div class="flex gap-4 border-b mb-5">
-      <button class="sub-btn active pb-2 text-sm" id="anTabK" onclick="showAnSub('kratom')">KRATOM ANALYTICS</button>
-      <button class="sub-btn pb-2 text-sm text-gray-500" id="anTabL" onclick="showAnSub('lottery')">SCRATCH-OFF ANALYTICS</button>
-    </div>
+<h2 class="font-bold mb-2">Scanner</h2>
 
-    <div id="an-kratom">
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5" id="kCards"></div>
-      <div class="grid md:grid-cols-2 gap-4 mb-5">
-        <div class="bg-gray-50 rounded-lg p-4"><div class="text-xs font-semibold text-gray-500 mb-2">Variance by Product</div><div class="chart-wrap"><canvas id="kChartBar"></canvas></div></div>
-        <div class="bg-gray-50 rounded-lg p-4"><div class="text-xs font-semibold text-gray-500 mb-2">Shrinkage Trend</div><div class="chart-wrap"><canvas id="kChartLine"></canvas></div></div>
-      </div>
-      <div class="overflow-x-auto" id="kProdTable"></div>
-    </div>
+<video id="scanner" class="w-full rounded"></video>
 
-    <div id="an-lottery" class="hidden">
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5" id="lCards"></div>
-      <div class="grid md:grid-cols-2 gap-4 mb-5">
-        <div class="bg-gray-50 rounded-lg p-4"><div class="text-xs font-semibold text-gray-500 mb-2">Variance by Game</div><div class="chart-wrap"><canvas id="lChartBar"></canvas></div></div>
-        <div class="bg-gray-50 rounded-lg p-4"><div class="text-xs font-semibold text-gray-500 mb-2">Lottery Trend</div><div class="chart-wrap"><canvas id="lChartLine"></canvas></div></div>
-      </div>
-      <div class="overflow-x-auto" id="lProdTable"></div>
-    </div>
-  </div>
+<button onclick="startScanner()" class="mt-2 bg-green-600 text-white px-4 py-2 rounded">
+Start Scanner
+</button>
 
-  <!-- ========== STORES TAB ========== -->
-  <div id="tab-stores" class="hidden">
-    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-      <h2 class="font-bold text-gray-700">All Keith's Locations</h2>
-      <div class="flex gap-2 items-center">
-        <select id="storeRegionFilter" class="border rounded px-2 py-1 text-xs" onchange="renderStores()">
-          <option value="">All Regions</option>
-          <option value="Hattiesburg">Hattiesburg</option>
-          <option value="Pine Belt">Pine Belt</option>
-          <option value="Gulf Coast">Gulf Coast</option>
-          <option value="South MS">South MS</option>
-          <option value="Alabama">Alabama</option>
-        </select>
-        <select id="storeStatusFilter" class="border rounded px-2 py-1 text-xs" onchange="renderStores()">
-          <option value="">All Status</option>
-          <option value="ALERT">Alert</option>
-          <option value="WATCH">Watch</option>
-          <option value="CLEAN">Clean</option>
-        </select>
-      </div>
-    </div>
-    <div id="storeGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
-  </div>
+<input id="barcodeResult" class="border p-2 w-full mt-2">
 
-  <!-- ========== ADMIN TAB ========== -->
-  <div id="tab-admin" class="hidden">
-    <div class="flex gap-4 border-b mb-5">
-      <button class="sub-btn active pb-2 text-sm" id="adTabU" onclick="showAdSub('users')">USERS</button>
-      <button class="sub-btn pb-2 text-sm text-gray-500" id="adTabD" onclick="showAdSub('districts')">DISTRICTS</button>
-      <button class="sub-btn pb-2 text-sm text-gray-500" id="adTabI" onclick="showAdSub('items')">ITEMS</button>
-    </div>
+<input id="scanQty" type="number" value="1" class="border p-2 w-full mt-2">
 
-    <!-- USERS, DISTRICTS, ITEMS sections (identical to previous version, omitted for brevity but will be included in final code) -->
-    <!-- ... -->
-  </div>
+<button onclick="saveScan()" class="mt-2 bg-blue-600 text-white px-4 py-2 rounded">
+Save Scan
+</button>
 
-  </div><!-- /card -->
-</div><!-- /main -->
+</div>
 
-<!-- FOOTER -->
-<footer style="background:#003087;" class="text-center text-white text-xs py-3">
-  <span class="opacity-60">Keith's Superstores · </span>
-  <em>"The Fastest And Friendliest"</em>
-  <span class="opacity-60"> · Shrink Shield v5.0</span>
-</footer>
+</div>
 
-</div><!-- /appScreen -->
+
+<!-- MANUAL PAGE -->
+
+<div id="manualPage" class="hidden">
+
+<div class="bg-white p-4 rounded shadow">
+
+<h2 class="font-bold mb-2">Manual Entry</h2>
+
+<input id="manualBarcode" placeholder="Barcode" class="border p-2 w-full mb-2">
+
+<input id="manualName" placeholder="Item Name" class="border p-2 w-full mb-2">
+
+<input id="manualPrice" placeholder="Price" class="border p-2 w-full mb-2">
+
+<input id="manualQty" type="number" value="1" class="border p-2 w-full mb-2">
+
+<button onclick="saveManual()" class="bg-blue-600 text-white px-4 py-2 rounded">
+Save Item
+</button>
+
+</div>
+
+</div>
+
+
+<!-- INVENTORY PAGE -->
+
+<div id="inventoryPage" class="hidden">
+
+<div class="bg-white p-4 rounded shadow">
+
+<h2 class="font-bold mb-2">Inventory</h2>
+
+<table class="w-full">
+
+<thead>
+<tr class="border-b">
+<th>Barcode</th>
+<th>Name</th>
+<th>Qty</th>
+</tr>
+</thead>
+
+<tbody id="inventoryTable"></tbody>
+
+</table>
+
+<button onclick="loadInventory()" class="mt-3 bg-gray-700 text-white px-3 py-1 rounded">
+Refresh
+</button>
+
+</div>
+
+</div>
+
+
+<!-- ANALYTICS PAGE -->
+
+<div id="analyticsPage" class="hidden">
+
+<div class="bg-white p-4 rounded shadow">
+
+<h2 class="font-bold mb-2">Analytics</h2>
+
+<div id="analyticsBox"></div>
+
+</div>
+
+</div>
+
+
+<!-- ADMIN PAGE -->
+
+<div id="adminPage" class="hidden">
+
+<div class="bg-white p-4 rounded shadow">
+
+<h2 class="font-bold mb-2">Admin Panel</h2>
+
+<button onclick="loadInventory()" class="bg-purple-600 text-white px-3 py-1 rounded">
+Load Inventory
+</button>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+
 
 <script>
-// ═══════════════════════════════════════════════════
-// DATA DEFINITIONS
-// ═══════════════════════════════════════════════════
-const KRATOM_DEFAULTS = [
-  {id:'k1', name:'Viva Zen Ultimate',          price:14.99},
-  {id:'k2', name:'Viva Zen Red Top',           price:12.99},
-  {id:'k3', name:'Viva Zen White Top',         price:12.99},
-  {id:'k4', name:'Kryptic Kratom Relaxation',  price:11.99},
-  {id:'k5', name:'Kryptic Kratom Thin',        price:11.99},
-  {id:'k6', name:'Kratom Extract',             price:13.99},
-  {id:'k7', name:'K Shot',                     price:10.99},
-  {id:'k8', name:'Kratom Yellow Cap',          price: 9.99},
-  {id:'k9', name:'Feel Free',                  price:15.99},
-];
-let KRATOM = [];
 
-const SCRATCHERS_DEFAULTS = [
-  {id:'s01', name:'Cash on the Spot',     price:1 }, {id:'s02', name:'$1 Lottery Ticket',    price:1 },
-  {id:'s03', name:'Piggy Bank Buck',      price:1 }, {id:'s04', name:'3 X Lucky',            price:2 },
-  {id:'s05', name:'Wonder Bucks',         price:2 }, {id:'s06', name:'Cruisin the Coast',    price:3 },
-  {id:'s07', name:'Jumbo Bucks',          price:2 }, {id:'s08', name:'Lucky Doubler',        price:2 },
-  {id:'s09', name:'Cash Grab',            price:2 }, {id:'s10', name:'Emerald Green',        price:3 },
-  {id:'s11', name:'25,000 Mad Money',     price:5 }, {id:'s12', name:'Bring the Heat',       price:3 },
-  {id:'s13', name:'Home Run',             price:3 }, {id:'s14', name:'Crossword',            price:3 },
-  {id:'s15', name:'Bingo',                price:2 }, {id:'s16', name:'5X the Bank',          price:5 },
-  {id:'s17', name:'Lucky Dog',            price:2 }, {id:'s18', name:'Blazin Hot BK',        price:3 },
-  {id:'s19', name:'Break the Bank',       price:3 }, {id:'s20', name:'Stacks of Cash',      price:2 },
-  {id:'s21', name:'Fun 5s',               price:5 }, {id:'s22', name:'20X the Money',       price:5 },
-  {id:'s23', name:'Cashtastic',           price:2 }, {id:'s24', name:'Wild Money',          price:2 },
-  {id:'s25', name:'Gold Bar Bingo',       price:3 }, {id:'s26', name:'Super Cashword',      price:3 },
-  {id:'s27', name:'Red Hot Cash',         price:3 }, {id:'s28', name:"Triple Red 7's",      price:3 },
-  {id:'s29', name:'50X the Money',        price:10}, {id:'s30', name:'100,000 Payout',      price:10},
-  {id:'s31', name:"Gold 7's",             price:2 }, {id:'s32', name:'Diamond White',       price:2 },
-  {id:'s33', name:'Spectacular Riches',   price:10}, {id:'s34', name:'Colossal Cash',       price:10},
-  {id:'s35', name:'Extravaganza',         price:20}, {id:'s36', name:'200X Cash Blitz',     price:20},
-  {id:'s37', name:'500,000 Extreme',      price:20},
-];
-let SCRATCHERS = [];
+/* SUPABASE */
 
-// ═══════════════════════════════════════════════════
-// SUPABASE CLIENT
-// ═══════════════════════════════════════════════════
-const SUPABASE_URL = 'https://ylfsqjbqhewpfiooytlg.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsZnNxamJxaGV3cGZpb295dGxnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NzQwODQsImV4cCI6MjA4ODM1MDA4NH0.Ssl5J6ktZIVtLd2cq8vH7PWdR4-yZwI5tt4PtXkVqWk';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL = "https://ylfsqjbqhewpfiooytlg.supabase.co"
 
-// ── Row mappers (updated for new structure) ──
-function toShiftRow(e){
-  return {
-    id: e.id,
-    store: e.store,
-    store_name: e.storeName,
-    store_city: e.storeCity,
-    date: e.date,
-    shift: e.shift,
-    in_clerk: e.inClerk,
-    out_clerk: e.outClerk,
-    kratom: e.kratom,      // { begin, end, sales }
-    lottery: e.lottery,    // { begin, end, sales } (begin optional)
-    status: e.status,
-    ts_start: e.tsStart,
-    ts_end: e.tsEnd
-  };
-}
-function fromShiftRow(r){
-  return {
-    id: r.id,
-    store: r.store,
-    storeName: r.store_name,
-    storeCity: r.store_city,
-    date: r.date,
-    shift: r.shift,
-    inClerk: r.in_clerk,
-    outClerk: r.out_clerk,
-    kratom: r.kratom || {},
-    lottery: r.lottery || {},
-    status: r.status,
-    tsStart: r.ts_start,
-    tsEnd: r.ts_end
-  };
-}
-function toUserRow(u){ /* same as before */ }
-function fromUserRow(r){ /* same as before */ }
-function toDistrictRow(d){ /* same as before */ }
-function fromDistrictRow(r){ /* same as before */ }
+const SUPABASE_KEY = "YOUR_KEY"
 
-// ── Shared UI helpers ──
-function showFormError(errEl, msg, err){
-  const detail = err ? (err instanceof TypeError ? 'Network error — please try again.' : err.message) : '';
-  errEl.textContent = msg + (detail ? ': ' + detail : '');
-  errEl.classList.remove('hidden');
-  if(err) console.error(err);
-}
-function upsertChart(instance, canvasId, config){
-  if(instance) instance.destroy();
-  return new Chart(document.getElementById(canvasId), config);
-}
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
-// STORES list (same as before, includes all Keith's locations)
-const STORES = [
-  {id:'s135',num:'135',name:'Store #135',city:'Hattiesburg, MS',addr:'5331 Old Hwy 11',phone:'(601) 271-8711',hours:'Mon–Sun 5am–12am',region:'Hattiesburg'},
-  {id:'s137',num:'137',name:'Store #137',city:'Hattiesburg, MS',addr:'5170 W. 4th St.',phone:'(601) 296-6008',hours:'Sun–Thurs 5am–11pm · Fri–Sat 5am–12am',region:'Hattiesburg'},
-  {id:'s150',num:'150',name:'Store #150',city:'Hattiesburg, MS',addr:'6750 Hwy 49',phone:'(601) 271-8400',hours:'Mon–Sun 5am–12am',region:'Hattiesburg'},
-  {id:'s151',num:'151',name:'Store #151',city:'Hattiesburg, MS',addr:'7276 Hwy 49',phone:'(601) 296-6761',hours:'Sun–Thurs 5am–11pm · Fri–Sat 5am–12am',region:'Hattiesburg'},
-  {id:'s157',num:'157',name:'Store #157',city:'Hattiesburg, MS',addr:'2462 US Hwy 49',phone:'(601) 336-1340',hours:'Mon–Sun 5am–12am',region:'Hattiesburg'},
-  {id:'s173',num:'173',name:'Store #173',city:'Hattiesburg, MS',addr:'1858 Evelyn Gandy Pkwy',phone:'(601) 583-4485',hours:'Mon–Sun 5am–11pm',region:'Hattiesburg'},
-  {id:'s175',num:'175',name:'Store #175',city:'Petal, MS',addr:'101 Carterville Rd',phone:'(601) 584-8665',hours:'Mon–Thurs 5am–11pm · Fri–Sat 5am–12am',region:'Hattiesburg'},
-  {id:'s100',num:'100',name:'Store #100',city:'Ellisville, MS',addr:'304 Hill St.',phone:'(601) 477-9990',hours:'Mon–Sun 5am–12am',region:'Pine Belt'},
-  {id:'s105',num:'105',name:'Store #105',city:'Ellisville, MS',addr:'5213 Hwy 11 N.',phone:'(601) 425-3085',hours:'Mon–Sun 5am–12am',region:'Pine Belt'},
-  {id:'sMos',num:'—',  name:'Moselle',city:'Moselle, MS',addr:'59 Moselle Seminary Rd',phone:'(601) 582-8330',hours:'Mon–Sun 4am–11pm',region:'Pine Belt'},
-  {id:'s117',num:'117',name:'Store #117',city:'Bay Springs, MS',addr:'2675 Hwy 15',phone:'(601) 764-4580',hours:'',region:'Pine Belt'},
-  {id:'s125',num:'125',name:'Store #125',city:'Seminary, MS',addr:'2078 US Hwy 49',phone:'(601) 722-4323',hours:'Mon–Sun 5am–10pm',region:'Pine Belt'},
-  {id:'s127',num:'127',name:'Store #127',city:'Collins, MS',addr:'3030 Hwy 49',phone:'(601) 909-9133',hours:'Sun–Thurs 5am–11pm · Fri–Sat 5am–12am',region:'Pine Belt'},
-  {id:'s130',num:'130',name:'Store #130',city:'Columbia, MS',addr:'1475 Hwy 98 E.',phone:'(601) 736-6662',hours:'Sun–Thurs 5am–11pm · Fri–Sat 5am–12am',region:'Pine Belt'},
-  {id:'s140',num:'140',name:'Store #140',city:'Mount Olive, MS',addr:'1196 Rock Hill Rd.',phone:'(601) 797-4545',hours:'Mon–Sun 5am–11pm',region:'Pine Belt'},
-  {id:'s155',num:'155',name:'Store #155',city:'Sumrall, MS',addr:'8431 Hwy 98',phone:'(601) 296-4721',hours:'Sun–Thurs 5am–9pm · Fri–Sat 5am–10pm',region:'Pine Belt'},
-  {id:'s185',num:'185',name:'Store #185',city:'Lumberton, MS',addr:'918 E. Main Ave',phone:'(601) 796-2780',hours:'Mon–Sun 5am–11pm',region:'Pine Belt'},
-  {id:'s082',num:'82', name:'Store #82', city:'Moss Point, MS',addr:'21000 Hwy 613',phone:'(228) 588-2134',hours:'Mon–Sun 4am–12am',region:'Gulf Coast'},
-  {id:'s085',num:'85', name:'Store #85', city:'Moss Point, MS',addr:'6820 Hwy 613',phone:'(228) 474-2556',hours:'Mon–Thurs 3am–11pm · Fri 3am–12am · Sat 5am–12am · Sun 5am–11pm',region:'Gulf Coast'},
-  {id:'s086',num:'86', name:'Store #86', city:'Moss Point, MS',addr:'6718 Hwy 63',phone:'(228) 474-0004',hours:'Mon–Sun 4am–12am',region:'Gulf Coast'},
-  {id:'s088',num:'88', name:'Store #88', city:'Vancleave, MS',addr:'10909 Hwy 57',phone:'(228) 826-9115',hours:'Mon–Sun 4am–12am',region:'Gulf Coast'},
-  {id:'s089',num:'89', name:'Store #89', city:'Ocean Springs, MS',addr:'7501 Washington Ave',phone:'(228) 872-1955',hours:'Open 24/7',region:'Gulf Coast'},
-  {id:'s090',num:'90', name:'Store #90', city:'Ocean Springs, MS',addr:'',phone:'(228) 392-9084',hours:'Open 24/7',region:'Gulf Coast'},
-  {id:'s107',num:'107',name:'Store #107',city:'Saucier, MS',addr:'26181 Hwy 49 S.',phone:'(228) 832-0298',hours:'Sun–Thurs 5am–11pm · Fri–Sat 5am–12am',region:'Gulf Coast'},
-  {id:'s108',num:'108',name:'Store #108',city:'Long Beach, MS',addr:'19000 28th St.',phone:'(228) 575-6822',hours:'Mon–Sun 5am–12am',region:'Gulf Coast'},
-  {id:'s109',num:'109',name:'Store #109',city:'Pass Christian, MS',addr:'102 E Beach Blvd',phone:'(228) 452-5651',hours:'Mon–Sun 5am–12am',region:'Gulf Coast'},
-  {id:'s112',num:'112',name:'Store #112',city:'Gautier, MS',addr:'819 Hwy 90',phone:'(228) 497-9687',hours:'Mon–Fri 3am–11pm · Sat 4am–12am · Sun 5am–12am',region:'Gulf Coast'},
-  {id:'s182',num:'182',name:'Store #182',city:'Waveland, MS',addr:'10513 Hwy 603',phone:'(228) 466-4494',hours:'Mon–Sun 5am–11pm',region:'Gulf Coast'},
-  {id:'s183',num:'183',name:'Store #183',city:'Bay St. Louis, MS',addr:'701 Hwy 90',phone:'(251) 649-6544',hours:'Mon–Sun 5am–11pm',region:'Gulf Coast'},
-  {id:'s184',num:'184',name:'Store #184',city:'Bay St. Louis, MS',addr:'4955 Hwy 90',phone:'(228) 466-4336',hours:'Mon–Sun 5am–11pm',region:'Gulf Coast'},
-  {id:'s080',num:'80', name:'Store #80', city:'Lucedale, MS',addr:'6239 Hwy 98',phone:'(601) 947-7520',hours:'Mon–Sun 5am–12am',region:'South MS'},
-  {id:'s081',num:'81', name:'Store #81', city:'Lucedale, MS',addr:'7292 Hwy 63 S.',phone:'(601) 947-8120',hours:'Mon–Sun 5am–12am',region:'South MS'},
-  {id:'s091',num:'91', name:'Store #91', city:'Wiggins, MS',addr:'1220 W. Central Ave.',phone:'(601) 928-9403',hours:'Sun–Thurs 5am–11pm · Fri–Sat 5am–12am',region:'South MS'},
-  {id:'s120',num:'120',name:'Store #120',city:'Purvis, MS',addr:'5812 Hwy 11',phone:'(601) 794-2249',hours:'Mon–Sun 5am–10pm',region:'South MS'},
-  {id:'s122',num:'122',name:'Store #122',city:'Purvis, MS',addr:'5791 Hwy 11',phone:'(601) 794-0422',hours:'Mon–Sun 5am–10pm',region:'South MS'},
-  {id:'s123',num:'123',name:'Store #123',city:'Purvis, MS',addr:'361 Hwy 589',phone:'(601) 744-0660',hours:'Sun–Thurs 5am–11pm · Fri–Sat 5am–12am',region:'South MS'},
-  {id:'s160',num:'160',name:'Store #160',city:'Wiggins, MS',addr:'114 Magnolia Dr.',phone:'(601) 528-9002',hours:'Mon–Sun 5am–11pm',region:'South MS'},
-  {id:'s161',num:'161',name:'Store #161',city:'Wiggins, MS',addr:'3333 Hwy 49',phone:'(601) 928-7826',hours:'Mon–Sun 5am–10pm',region:'South MS'},
-  {id:'s192',num:'192',name:'Store #192',city:'Picayune, MS',addr:'1405 Hwy 43 N.',phone:'(601) 798-9554',hours:'Sun–Thurs 5am–11pm · Fri–Sat 5am–12am',region:'South MS'},
-  {id:'s194',num:'194',name:'Store #194',city:'Carriere, MS',addr:'498 W. Union Rd.',phone:'(601) 889-0394',hours:'Open 24/7',region:'South MS'},
-  {id:'s196',num:'196',name:'Store #196',city:'Poplarville, MS',addr:'4670 Hwy 53',phone:'(601) 403-8290',hours:'Sun–Thurs 5am–11pm · Fri–Sat 5am–12am',region:'South MS'},
-  {id:'s060',num:'60', name:'Store #60', city:'Wilmer, AL',addr:'13515 Moffett Rd',phone:'(251) 649-6544',hours:'Mon–Sun 5am–12am',region:'Alabama'},
-];
 
-// ═══════════════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════════════
-let shiftLog = [];
 
-async function saveState(){
-  if(!shiftLog.length) return;
-  const {error} = await sb.from('shift_logs').upsert(shiftLog.map(toShiftRow), {onConflict:'id'});
-  if(error) console.error('saveState', error);
-}
-async function loadState(){
-  const {data, error} = await sb.from('shift_logs').select('*').order('ts_start', {ascending:false});
-  if(error){ console.error('loadState', error); return; }
-  shiftLog = (data||[]).map(fromShiftRow);
-}
-async function db_insertShift(entry){
-  const {error} = await sb.from('shift_logs').insert([toShiftRow(entry)]);
-  if(error) throw error;
-}
-async function db_updateShift(id, updates){
-  const {error} = await sb.from('shift_logs').update(updates).eq('id', id);
-  if(error) throw error;
-}
+/* LOGIN */
 
-// ═══════════════════════════════════════════════════
-// DEMO DATA (updated for new structure)
-// ═══════════════════════════════════════════════════
-function seedDemo(){
-  const shifts=['Morning','Afternoon','Evening','Night'];
-  const clerks=['Maria G','Tom B','Sarah K','James L','Nina R','Carlos M','Dana P','Leo W'];
-  const dates=['2026-02-15','2026-02-17','2026-02-19','2026-02-21','2026-02-24','2026-02-26','2026-03-01','2026-03-03','2026-03-05'];
-  const seedStores=['s150','s151','s135','s107','s184','s192','s060','s105'];
+async function login(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email,
+    password: password
+  })
 
-  seedStores.forEach(sid=>{
-    const store=STORES.find(s=>s.id===sid);
-    dates.forEach((date,di)=>{
-      const shift=shifts[di%4];
-      const inClerk=clerks[Math.floor(Math.random()*clerks.length)];
-      const outClerk=clerks[Math.floor(Math.random()*clerks.length)];
-
-      // Build begin counts
-      const kratomBegin = {};
-      KRATOM.forEach(p=>{
-        kratomBegin[p.id] = {
-          office: { bottles: Math.floor(Math.random()*10), cases: Math.floor(Math.random()*3) },
-          floor:  { bottles: Math.floor(Math.random()*15), cases: Math.floor(Math.random()*4) }
-        };
-      });
-
-      // Build end counts (with some shrinkage)
-      const kratomEnd = {};
-      const kratomSales = {};
-      KRATOM.forEach(p=>{
-        const beginBottles = kratomBegin[p.id].office.bottles + kratomBegin[p.id].office.cases*12 +
-                             kratomBegin[p.id].floor.bottles + kratomBegin[p.id].floor.cases*12;
-        const sales = Math.floor(Math.random()*8);
-        const shrink = Math.random()>0.7 ? Math.floor(Math.random()*3) : 0;
-        const endBottles = beginBottles - sales - shrink;
-        // distribute end bottles arbitrarily
-        const officeEndBottles = Math.min(endBottles, Math.floor(Math.random()*10));
-        const floorEndBottles = endBottles - officeEndBottles;
-        kratomEnd[p.id] = {
-          office: { bottles: officeEndBottles % 12, cases: Math.floor(officeEndBottles / 12) },
-          floor:  { bottles: floorEndBottles % 12, cases: Math.floor(floorEndBottles / 12) }
-        };
-        kratomSales[p.id] = sales;
-      });
-
-      // Lottery (simplified – begin is open, end is close)
-      const lotteryBegin = {};
-      const lotteryEnd = {};
-      const lotterySales = {};
-      SCRATCHERS.slice(0,10).forEach(p=>{
-        const open = Math.floor(Math.random()*50)+10;
-        const sales = Math.floor(Math.random()*6);
-        const close = open - sales - (Math.random()>0.8?1:0);
-        lotteryBegin[p.id] = open;
-        lotteryEnd[p.id] = close;
-        lotterySales[p.id] = sales;
-      });
-
-      shiftLog.push({
-        id:`${sid}_${date}_${shift}`.replace(/\s/g,''),
-        store:sid, storeName:store.name, storeCity:store.city,
-        date, shift,
-        inClerk, outClerk,
-        kratom: { begin: kratomBegin, end: kratomEnd, sales: kratomSales },
-        lottery: { begin: lotteryBegin, end: lotteryEnd, sales: lotterySales },
-        status: 'completed',
-        tsStart: new Date(`${date}T06:00:00`).getTime()+di*28800000,
-        tsEnd: new Date(`${date}T14:00:00`).getTime()+di*28800000,
-      });
-    });
-  });
-}
-
-// ═══════════════════════════════════════════════════
-// COUNT SUB-TABS
-// ═══════════════════════════════════════════════════
-function showCountSub(type){
-  document.getElementById('sub-start').classList.toggle('hidden', type!=='start');
-  document.getElementById('sub-end').classList.toggle('hidden', type!=='end');
-  document.getElementById('countSubStart').classList.toggle('active', type==='start');
-  document.getElementById('countSubEnd').classList.toggle('active', type==='end');
-  document.getElementById('countSubStart').classList.toggle('text-gray-500', type!=='start');
-  document.getElementById('countSubEnd').classList.toggle('text-gray-500', type!=='end');
-
-  if(type==='end') populateActiveShifts();
-}
-
-function populateActiveShifts(){
-  const sid = document.getElementById('storeSelect').value;
-  const active = shiftLog.filter(e => e.store === sid && e.status === 'started');
-  const sel = document.getElementById('endShiftSelect');
-  sel.innerHTML = '<option value="">— Select a started shift —</option>';
-  active.forEach(e => {
-    const opt = document.createElement('option');
-    opt.value = e.id;
-    opt.textContent = `${e.shift} shift · ${e.date} · started by ${e.inClerk}`;
-    sel.appendChild(opt);
-  });
-}
-
-function loadActiveShift(){
-  const id = document.getElementById('endShiftSelect').value;
-  if(!id) return;
-  const shift = shiftLog.find(e => e.id === id);
-  if(!shift) return;
-  // Pre-fill end tables with zeros (could also prefill with begin counts for reference)
-  renderEndKratomTable(shift.kratom.begin);
-  renderEndLotteryTable(shift.lottery.begin);
-}
-
-// Build start kratom table
-function buildStartKratomTable(){
-  const tbody = document.getElementById('startKratomBody');
-  tbody.innerHTML = '';
-  KRATOM.forEach(p => {
-    const tr = document.createElement('tr');
-    tr.id = `start-${p.id}`;
-    tr.innerHTML = `
-      <td class="py-2 pr-3 font-medium text-gray-800">${p.name}</td>
-      <td class="py-2 px-1"><input type="number" min="0" id="start-ob-${p.id}" class="num-inp" value="0"></td>
-      <td class="py-2 px-1"><input type="number" min="0" id="start-oc-${p.id}" class="num-inp" value="0"></td>
-      <td class="py-2 px-1"><input type="number" min="0" id="start-fb-${p.id}" class="num-inp" value="0"></td>
-      <td class="py-2 px-1"><input type="number" min="0" id="start-fc-${p.id}" class="num-inp" value="0"></td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-function renderEndKratomTable(beginData = null){
-  const tbody = document.getElementById('endKratomBody');
-  tbody.innerHTML = '';
-  KRATOM.forEach(p => {
-    const tr = document.createElement('tr');
-    tr.id = `end-${p.id}`;
-    const beginHint = beginData?.[p.id] ? ` (begin: O${beginData[p.id].office.bottles}/${beginData[p.id].office.cases} F${beginData[p.id].floor.bottles}/${beginData[p.id].floor.cases})` : '';
-    tr.innerHTML = `
-      <td class="py-2 pr-3 font-medium text-gray-800">${p.name}<span class="text-xs text-gray-400 ml-1">${beginHint}</span></td>
-      <td class="py-2 px-1"><input type="number" min="0" id="end-ob-${p.id}" class="num-inp" value="0"></td>
-      <td class="py-2 px-1"><input type="number" min="0" id="end-oc-${p.id}" class="num-inp" value="0"></td>
-      <td class="py-2 px-1"><input type="number" min="0" id="end-fb-${p.id}" class="num-inp" value="0"></td>
-      <td class="py-2 px-1"><input type="number" min="0" id="end-fc-${p.id}" class="num-inp" value="0"></td>
-      <td class="py-2 px-1"><input type="number" min="0" id="end-sales-${p.id}" class="num-inp" value="0"></td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-function renderEndLotteryTable(beginData = null){
-  const tbody = document.getElementById('endLotteryBody');
-  tbody.innerHTML = '';
-  SCRATCHERS.forEach(p => {
-    const tr = document.createElement('tr');
-    tr.id = `end-lot-${p.id}`;
-    const begin = beginData?.[p.id] || 0;
-    tr.innerHTML = `
-      <td class="py-2 pr-3 font-medium text-gray-800">${p.name} <span class="text-xs text-gray-400">(begin: ${begin})</span></td>
-      <td class="py-2 px-1"><input type="number" min="0" id="end-lo-${p.id}" class="num-inp" value="0" placeholder="Open"></td>
-      <td class="py-2 px-1"><input type="number" min="0" id="end-ls-${p.id}" class="num-inp" value="0" placeholder="Sales"></td>
-      <td class="py-2 px-1"><input type="number" min="0" id="end-lc-${p.id}" class="num-inp" value="0" placeholder="Close"></td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-// ═══════════════════════════════════════════════════
-// START SHIFT
-// ═══════════════════════════════════════════════════
-async function startShift(){
-  const sid = document.getElementById('storeSelect').value;
-  const store = STORES.find(s=>s.id===sid)||{name:sid,city:''};
-  const shift = document.getElementById('startShiftSel').value;
-  const date = document.getElementById('startDate').value || new Date().toISOString().split('T')[0];
-  const clerk = document.getElementById('startClerk').value.trim();
-  if(!clerk){ alert('Please enter incoming clerk name.'); return; }
-
-  const kratomBegin = {};
-  KRATOM.forEach(p=>{
-    const ob = parseInt(document.getElementById(`start-ob-${p.id}`).value) || 0;
-    const oc = parseInt(document.getElementById(`start-oc-${p.id}`).value) || 0;
-    const fb = parseInt(document.getElementById(`start-fb-${p.id}`).value) || 0;
-    const fc = parseInt(document.getElementById(`start-fc-${p.id}`).value) || 0;
-    kratomBegin[p.id] = { office: { bottles: ob, cases: oc }, floor: { bottles: fb, cases: fc } };
-  });
-
-  const entry = {
-    id: `${sid}_${Date.now()}`,
-    store: sid,
-    storeName: store.name,
-    storeCity: store.city,
-    date,
-    shift,
-    inClerk: clerk,
-    outClerk: '',
-    kratom: { begin: kratomBegin, end: {}, sales: {} },
-    lottery: { begin: {}, end: {}, sales: {} },
-    status: 'started',
-    tsStart: Date.now(),
-    tsEnd: null
-  };
-
-  try {
-    await db_insertShift(entry);
-  } catch(e) {
-    alert('Error starting shift: ' + e.message);
-    return;
-  }
-  shiftLog.unshift(entry);
-  alert(`Shift started for ${store.name} — ${shift}`);
-  // Clear start form
-  document.getElementById('startClerk').value = '';
-  KRATOM.forEach(p=>{
-    document.getElementById(`start-ob-${p.id}`).value = 0;
-    document.getElementById(`start-oc-${p.id}`).value = 0;
-    document.getElementById(`start-fb-${p.id}`).value = 0;
-    document.getElementById(`start-fc-${p.id}`).value = 0;
-  });
-}
-
-// ═══════════════════════════════════════════════════
-// COMPLETE SHIFT
-// ═══════════════════════════════════════════════════
-async function completeShift(){
-  const id = document.getElementById('endShiftSelect').value;
-  if(!id){ alert('Please select an active shift.'); return; }
-  const shift = shiftLog.find(e => e.id === id);
-  if(!shift) return;
-
-  const outClerk = document.getElementById('endClerk').value.trim();
-  if(!outClerk){ alert('Please enter outgoing clerk name.'); return; }
-
-  // Gather end counts and sales for kratom
-  const kratomEnd = {};
-  const kratomSales = {};
-  KRATOM.forEach(p=>{
-    const ob = parseInt(document.getElementById(`end-ob-${p.id}`).value) || 0;
-    const oc = parseInt(document.getElementById(`end-oc-${p.id}`).value) || 0;
-    const fb = parseInt(document.getElementById(`end-fb-${p.id}`).value) || 0;
-    const fc = parseInt(document.getElementById(`end-fc-${p.id}`).value) || 0;
-    const sales = parseInt(document.getElementById(`end-sales-${p.id}`).value) || 0;
-    kratomEnd[p.id] = { office: { bottles: ob, cases: oc }, floor: { bottles: fb, cases: fc } };
-    kratomSales[p.id] = sales;
-  });
-
-  // Lottery
-  const lotteryEnd = {};
-  const lotterySales = {};
-  SCRATCHERS.forEach(p=>{
-    const open = parseInt(document.getElementById(`end-lo-${p.id}`).value) || 0;
-    const sales = parseInt(document.getElementById(`end-ls-${p.id}`).value) || 0;
-    const close = parseInt(document.getElementById(`end-lc-${p.id}`).value) || 0;
-    lotteryEnd[p.id] = { open, close };
-    lotterySales[p.id] = sales;
-  });
-
-  // Update shift object
-  shift.outClerk = outClerk;
-  shift.kratom.end = kratomEnd;
-  shift.kratom.sales = kratomSales;
-  shift.lottery.end = lotteryEnd;
-  shift.lottery.sales = lotterySales;
-  shift.status = 'completed';
-  shift.tsEnd = Date.now();
-
-  try {
-    await db_updateShift(shift.id, toShiftRow(shift));
-  } catch(e) {
-    alert('Error completing shift: ' + e.message);
-    return;
+  if (error) {
+    alert(error.message)
+    return
   }
 
-  alert('Shift completed! Variance calculated.');
-  showTab('review');
+  document.getElementById("loginScreen").style.display = "none"
+  document.getElementById("app").style.display = "block"
 }
 
-// ═══════════════════════════════════════════════════
-// REVIEW TAB
-// ═══════════════════════════════════════════════════
-let revSub = 'kratom';
-function showRevSub(type){
-  revSub = type;
-  document.getElementById('revTabK').classList.toggle('active', type==='kratom');
-  document.getElementById('revTabL').classList.toggle('active', type==='lottery');
-  document.getElementById('revTabK').classList.toggle('text-gray-500', type!=='kratom');
-  document.getElementById('revTabL').classList.toggle('text-gray-500', type!=='lottery');
-  renderReview(type);
+loadStores()
+loadAnalytics()
+
 }
 
-function renderReview(type='kratom'){
-  const sid = document.getElementById('storeSelect').value;
-  const entry = [...shiftLog].filter(e => e.store === sid && e.status === 'completed').sort((a,b)=>b.tsEnd - a.tsEnd)[0];
-  const el = document.getElementById('reviewContent');
-  if(!entry){ el.innerHTML = `<p class="text-gray-400 italic text-sm">No completed shifts for this store.</p>`; return; }
 
-  const metaBar = `<div class="flex flex-wrap gap-3 text-xs text-gray-600 bg-gray-50 rounded p-2.5 mb-4">
-    <span><strong>Store:</strong> ${entry.storeName}</span>
-    <span><strong>Date:</strong> ${entry.date}</span>
-    <span><strong>Shift:</strong> ${entry.shift}</span>
-    <span><strong>In:</strong> ${entry.inClerk}</span>
-    <span><strong>Out:</strong> ${entry.outClerk}</span>
-  </div>`;
 
-  if(type==='kratom'){
-    let rows = '', tv=0, td=0, fl=0;
-    KRATOM.forEach(p=>{
-      const begin = entry.kratom?.begin?.[p.id];
-      const end = entry.kratom?.end?.[p.id];
-      const sales = entry.kratom?.sales?.[p.id] || 0;
-      if(!begin || !end) return;
-      const beginTotal = (begin.office.bottles + begin.office.cases*12) + (begin.floor.bottles + begin.floor.cases*12);
-      const endTotal = (end.office.bottles + end.office.cases*12) + (end.floor.bottles + end.floor.cases*12);
-      const variance = beginTotal - sales - endTotal;
-      if(variance>0){ tv+=variance; td+=variance*p.price; fl++; }
-      const varClass = variance>0?'text-red-600':variance<0?'text-yellow-600':'text-green-600';
-      const badge = variance>0?`<span class="badge-r text-xs px-2 py-0.5 rounded-full">FLAGGED</span>`
-                  : variance<0?`<span class="badge-y text-xs px-2 py-0.5 rounded-full">OVER</span>`
-                  : `<span class="badge-g text-xs px-2 py-0.5 rounded-full">OK</span>`;
-      rows += `<tr class="${variance>0?'flag-row':''}">
-        <td class="py-2 pr-3 font-medium">${p.name}</td>
-        <td class="py-2 px-2 text-center text-sm">${begin.office.bottles}/${begin.office.cases}</td>
-        <td class="py-2 px-2 text-center text-sm">${begin.floor.bottles}/${begin.floor.cases}</td>
-        <td class="py-2 px-2 text-center text-sm">${end.office.bottles}/${end.office.cases}</td>
-        <td class="py-2 px-2 text-center text-sm">${end.floor.bottles}/${end.floor.cases}</td>
-        <td class="py-2 px-2 text-center text-sm">${sales}</td>
-        <td class="py-2 px-2 text-center font-bold text-sm ${varClass}">${variance>0?'-'+variance:variance<0?'+'+Math.abs(variance):'0'}</td>
-        <td class="py-2 text-center">${badge}</td>
-      </tr>`;
-    });
-    el.innerHTML = metaBar + `
-      <div class="grid grid-cols-3 gap-3 mb-4">
-        <div class="bg-gray-50 rounded p-3 text-center"><div class="text-xs text-gray-400">Variance Units</div><div class="text-xl font-black ${tv>0?'text-red-600':'text-green-600'}">${tv}</div></div>
-        <div class="bg-gray-50 rounded p-3 text-center"><div class="text-xs text-gray-400">Est. $ Loss</div><div class="text-xl font-black ${td>0?'text-red-600':'text-green-600'}">$${td.toFixed(2)}</div></div>
-        <div class="bg-gray-50 rounded p-3 text-center"><div class="text-xs text-gray-400">Flagged Items</div><div class="text-xl font-black ${fl>0?'text-orange-500':'text-green-600'}">${fl}</div></div>
-      </div>
-      <div class="overflow-x-auto"><table class="w-full text-sm">
-        <thead><tr class="text-xs text-gray-500 text-left">
-          <th class="pb-2 pr-3">PRODUCT</th>
-          <th class="pb-2 px-2 text-center" colspan="2">BEGIN</th>
-          <th class="pb-2 px-2 text-center" colspan="2">END</th>
-          <th class="pb-2 px-2 text-center">SALES</th>
-          <th class="pb-2 px-2 text-center">VARIANCE</th>
-          <th class="pb-2 text-center">STATUS</th>
-        </tr><tr class="text-xs text-gray-400">
-          <th></th>
-          <th class="pb-2 px-2 text-center">Office</th><th class="pb-2 px-2 text-center">Floor</th>
-          <th class="pb-2 px-2 text-center">Office</th><th class="pb-2 px-2 text-center">Floor</th>
-          <th></th><th></th><th></th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table></div>`;
-  } else {
-    // Lottery review (simple open/close)
-    let rows = '', tv=0, td=0, fl=0;
-    SCRATCHERS.forEach(p=>{
-      const begin = entry.lottery?.begin?.[p.id];
-      const end = entry.lottery?.end?.[p.id];
-      const sales = entry.lottery?.sales?.[p.id] || 0;
-      if(!begin || !end) return;
-      const variance = begin - sales - end.close; // assuming end is {open,close}
-      if(variance>0){ tv+=variance; td+=variance*p.price; fl++; }
-      const varClass = variance>0?'text-red-600':variance<0?'text-yellow-600':'text-green-600';
-      const badge = variance>0?`<span class="badge-r text-xs px-2 py-0.5 rounded-full">FLAGGED</span>`
-                  : variance<0?`<span class="badge-y text-xs px-2 py-0.5 rounded-full">OVER</span>`
-                  : `<span class="badge-g text-xs px-2 py-0.5 rounded-full">OK</span>`;
-      rows += `<tr class="${variance>0?'flag-row':''}">
-        <td class="py-2 pr-3 font-medium">${p.name}</td>
-        <td class="py-2 px-2 text-center">${begin}</td>
-        <td class="py-2 px-2 text-center">${sales}</td>
-        <td class="py-2 px-2 text-center">${end.close}</td>
-        <td class="py-2 px-2 text-center font-bold ${varClass}">${variance>0?'-'+variance:variance<0?'+'+Math.abs(variance):'0'}</td>
-        <td class="py-2 text-center">${badge}</td>
-      </tr>`;
-    });
-    el.innerHTML = metaBar + `
-      <div class="grid grid-cols-3 gap-3 mb-4">
-        <div class="bg-gray-50 rounded p-3 text-center"><div class="text-xs text-gray-400">Variance Units</div><div class="text-xl font-black ${tv>0?'text-red-600':'text-green-600'}">${tv}</div></div>
-        <div class="bg-gray-50 rounded p-3 text-center"><div class="text-xs text-gray-400">Est. $ Loss</div><div class="text-xl font-black ${td>0?'text-red-600':'text-green-600'}">$${td.toFixed(2)}</div></div>
-        <div class="bg-gray-50 rounded p-3 text-center"><div class="text-xs text-gray-400">Flagged Items</div><div class="text-xl font-black ${fl>0?'text-orange-500':'text-green-600'}">${fl}</div></div>
-      </div>
-      <div class="overflow-x-auto"><table class="w-full text-sm">
-        <thead><tr class="text-xs text-gray-500 text-left">
-          <th class="pb-2 pr-3">GAME</th>
-          <th class="pb-2 px-2 text-center">OPEN</th>
-          <th class="pb-2 px-2 text-center">SALES</th>
-          <th class="pb-2 px-2 text-center">CLOSE</th>
-          <th class="pb-2 px-2 text-center">VARIANCE</th>
-          <th class="pb-2 text-center">STATUS</th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table></div>`;
-  }
+/* NAVIGATION */
+
+function showPage(page){
+
+document.querySelectorAll("[id$='Page']")
+.forEach(p=>p.classList.add("hidden"))
+
+document.getElementById(page+"Page").classList.remove("hidden")
+
 }
 
-// ═══════════════════════════════════════════════════
-// LOG TAB (simplified version – shows summary per shift)
-// ═══════════════════════════════════════════════════
-function renderLog(){
-  const storeF = document.getElementById('logStore').value;
-  const typeF  = document.getElementById('logType').value;
-  const entries=[...shiftLog]
-    .filter(e=>e.status==='completed')
-    .filter(e=>!storeF||e.store===storeF)
-    .sort((a,b)=>b.tsEnd - a.tsEnd)
-    .slice(0,60);
-  const el=document.getElementById('logContent');
-  if(!entries.length){ el.innerHTML=`<p class="text-gray-400 italic text-sm">No completed shifts found.</p>`; return; }
 
-  el.innerHTML=entries.map(e=>{
-    let kFlags=[], lFlags=[], kDollar=0, lDollar=0;
-    if(typeF!=='lottery'){
-      KRATOM.forEach(p=>{
-        const begin = e.kratom?.begin?.[p.id];
-        const end = e.kratom?.end?.[p.id];
-        const sales = e.kratom?.sales?.[p.id] || 0;
-        if(!begin || !end) return;
-        const beginTotal = (begin.office.bottles + begin.office.cases*12) + (begin.floor.bottles + begin.floor.cases*12);
-        const endTotal = (end.office.bottles + end.office.cases*12) + (end.floor.bottles + end.floor.cases*12);
-        const v = beginTotal - sales - endTotal;
-        if(v>0){ kFlags.push(`${p.name} (−${v})`); kDollar += v * p.price; }
-      });
-    }
-    if(typeF!=='kratom'){
-      SCRATCHERS.forEach(p=>{
-        const begin = e.lottery?.begin?.[p.id];
-        const end = e.lottery?.end?.[p.id];
-        const sales = e.lottery?.sales?.[p.id] || 0;
-        if(!begin || !end) return;
-        const v = begin - sales - end.close;
-        if(v>0){ lFlags.push(`${p.name} (−${v})`); lDollar += v * p.price; }
-      });
-    }
-    const totalFlags = kFlags.length + lFlags.length;
-    const totalDollar = kDollar + lDollar;
-    const hasShrink = totalFlags > 0;
-    const cls = hasShrink?'border-red-200 bg-red-50':'border-gray-200';
-    const badge = hasShrink ? `<span class="badge-r text-xs px-2 py-0.5 rounded-full">${totalFlags} FLAG${totalFlags>1?'S':''}</span>`
-                            : `<span class="badge-g text-xs px-2 py-0.5 rounded-full">CLEAN</span>`;
-    return `<div class="border rounded-lg p-3 mb-2 ${cls}">
-      <div class="flex flex-wrap items-start justify-between gap-1">
-        <div>
-          <div class="font-semibold text-sm text-gray-800">${e.storeName} — ${e.shift} Shift</div>
-          <div class="text-xs text-gray-400">${e.date} &nbsp;·&nbsp; In: ${e.inClerk} &nbsp;·&nbsp; Out: ${e.outClerk}</div>
-        </div>
-        <div class="flex items-center gap-2">
-          ${badge}
-          ${hasShrink?`<span class="text-xs text-red-600 font-bold">$${totalDollar.toFixed(2)}</span>`:''}
-        </div>
-      </div>
-      ${kFlags.length?`<div class="mt-2 text-xs bg-red-100 rounded px-2 py-1 text-red-700">Kratom: ${kFlags.join(' · ')}</div>`:''}
-      ${lFlags.length?`<div class="mt-1 text-xs bg-orange-50 rounded px-2 py-1 text-orange-700 border border-orange-200">Scratch-Offs: ${lFlags.join(' · ')}</div>`:''}
-    </div>`;
-  }).join('');
+
+/* LOAD STORES */
+
+async function loadStores(){
+
+const {data} = await sb.from("stores").select("*")
+
+const select = document.getElementById("storeSelect")
+
+select.innerHTML=""
+
+data.forEach(store=>{
+
+const option=document.createElement("option")
+
+option.value=store.id
+option.text=store.name
+
+select.appendChild(option)
+
+})
+
 }
 
-// ═══════════════════════════════════════════════════
-// ANALYTICS TAB (simplified – similar to before but adapted)
-// ═══════════════════════════════════════════════════
-let kBar=null,kLine=null,lBar=null,lLine=null;
 
-function showAnSub(type){
-  document.getElementById('an-kratom').classList.toggle('hidden',type!=='kratom');
-  document.getElementById('an-lottery').classList.toggle('hidden',type!=='lottery');
-  document.getElementById('anTabK').classList.toggle('active',type==='kratom');
-  document.getElementById('anTabL').classList.toggle('active',type==='lottery');
-  document.getElementById('anTabK').classList.toggle('text-gray-500',type!=='kratom');
-  document.getElementById('anTabL').classList.toggle('text-gray-500',type!=='lottery');
-  renderAnalytics(type);
+
+/* SCANNER */
+
+const codeReader=new ZXing.BrowserBarcodeReader()
+
+async function startScanner(){
+
+const video=document.getElementById("scanner")
+
+const result=await codeReader.decodeOnceFromVideoDevice(undefined,video)
+
+document.getElementById("barcodeResult").value=result.text
+
 }
 
-function renderAnalytics(type='kratom'){
-  if(type==='kratom') renderKAnalytics();
-  else renderLAnalytics();
+
+
+/* SAVE SCAN */
+
+async function saveScan(){
+
+const store=document.getElementById("storeSelect").value
+const barcode=document.getElementById("barcodeResult").value
+const qty=document.getElementById("scanQty").value
+
+await sb.from("shift_logs").insert({
+
+id:crypto.randomUUID(),
+store:store,
+barcode:barcode,
+qty:qty,
+date:new Date().toISOString()
+
+})
+
+alert("Saved")
+
+loadAnalytics()
+
 }
 
-function renderKAnalytics(){
-  let tv=0, td=0, fl=0;
-  const varByProd={};
-  const dateMap={};
-  KRATOM.forEach(p=>{ varByProd[p.id]=0; });
-  shiftLog.filter(e=>e.status==='completed').forEach(e=>{
-    let shiftF = false;
-    KRATOM.forEach(p=>{
-      const begin = e.kratom?.begin?.[p.id];
-      const end = e.kratom?.end?.[p.id];
-      const sales = e.kratom?.sales?.[p.id] || 0;
-      if(!begin || !end) return;
-      const beginTotal = (begin.office.bottles + begin.office.cases*12) + (begin.floor.bottles + begin.floor.cases*12);
-      const endTotal = (end.office.bottles + end.office.cases*12) + (end.floor.bottles + end.floor.cases*12);
-      const v = beginTotal - sales - endTotal;
-      if(v>0){ tv+=v; td+=v*p.price; varByProd[p.id]+=v; shiftF=true; }
-      dateMap[e.date] = (dateMap[e.date]||0) + v;
-    });
-    if(shiftF) fl++;
-  });
 
-  document.getElementById('kCards').innerHTML = analyticsCards(tv, td, fl, shiftLog.filter(e=>e.status==='completed').length);
 
-  const pData = KRATOM.map(p=>varByProd[p.id]);
-  kBar = upsertChart(kBar,'kChartBar',{type:'bar',
-    data:{labels:KRATOM.map(p=>p.name.substring(0,14)+'…'),
-      datasets:[{label:'Variance',data:pData,backgroundColor:pData.map(v=>v>3?'#dc2626':v>1?'#f97316':'#16a34a'),borderRadius:4}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-      scales:{x:{ticks:{font:{size:9}}},y:{beginAtZero:true}}}});
+/* MANUAL SAVE */
 
-  const tDates = Object.keys(dateMap).sort().slice(-14);
-  kLine = upsertChart(kLine,'kChartLine',{type:'line',
-    data:{labels:tDates,datasets:[{label:'Daily Variance',data:tDates.map(d=>dateMap[d]||0),
-      borderColor:'#003087',backgroundColor:'rgba(0,48,135,.1)',fill:true,tension:.3,pointRadius:3}]},
-    options:{responsive:true,maintainAspectRatio:false,scales:{x:{ticks:{font:{size:9}}},y:{beginAtZero:true}}}});
+async function saveManual(){
 
-  document.getElementById('kProdTable').innerHTML = prodTable(KRATOM, varByProd);
+const barcode=document.getElementById("manualBarcode").value
+const name=document.getElementById("manualName").value
+const price=document.getElementById("manualPrice").value
+const qty=document.getElementById("manualQty").value
+
+await sb.from("items").insert({
+
+barcode:barcode,
+name:name,
+price:price,
+qty:qty
+
+})
+
+alert("Item Added")
+
 }
 
-function renderLAnalytics(){
-  let tv=0, td=0, fl=0;
-  const varByProd={};
-  const dateMap={};
-  SCRATCHERS.forEach(p=>{ varByProd[p.id]=0; });
-  shiftLog.filter(e=>e.status==='completed').forEach(e=>{
-    let shiftF = false;
-    SCRATCHERS.forEach(p=>{
-      const begin = e.lottery?.begin?.[p.id];
-      const end = e.lottery?.end?.[p.id];
-      const sales = e.lottery?.sales?.[p.id] || 0;
-      if(!begin || !end) return;
-      const v = begin - sales - end.close;
-      if(v>0){ tv+=v; td+=v*p.price; varByProd[p.id]+=v; shiftF=true; }
-      dateMap[e.date] = (dateMap[e.date]||0) + v;
-    });
-    if(shiftF) fl++;
-  });
 
-  document.getElementById('lCards').innerHTML = analyticsCards(tv, td, fl, shiftLog.filter(e=>e.status==='completed').length);
 
-  const top10 = SCRATCHERS.map(p=>({p, v:varByProd[p.id]})).sort((a,b)=>b.v - a.v).slice(0,12);
-  const tData = top10.map(x=>x.v);
-  lBar = upsertChart(lBar,'lChartBar',{type:'bar',
-    data:{labels:top10.map(x=>x.p.name.substring(0,16)),
-      datasets:[{label:'Variance',data:tData,backgroundColor:tData.map(v=>v>3?'#dc2626':v>1?'#f97316':'#16a34a'),borderRadius:4}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-      scales:{x:{ticks:{font:{size:9}}},y:{beginAtZero:true}}}});
+/* LOAD INVENTORY */
 
-  const dDates = Object.keys(dateMap).sort().slice(-14);
-  lLine = upsertChart(lLine,'lChartLine',{type:'line',
-    data:{labels:dDates,datasets:[{label:'Daily Variance',data:dDates.map(d=>dateMap[d]||0),
-      borderColor:'#C8102E',backgroundColor:'rgba(200,16,46,.1)',fill:true,tension:.3,pointRadius:3}]},
-    options:{responsive:true,maintainAspectRatio:false,scales:{x:{ticks:{font:{size:9}}},y:{beginAtZero:true}}}});
+async function loadInventory(){
 
-  document.getElementById('lProdTable').innerHTML = prodTable(SCRATCHERS, varByProd);
+const {data}=await sb.from("items").select("*")
+
+let table=document.getElementById("inventoryTable")
+
+table.innerHTML=""
+
+data.forEach(i=>{
+
+table.innerHTML+=`
+<tr>
+<td>${i.barcode}</td>
+<td>${i.name}</td>
+<td>${i.qty || 0}</td>
+</tr>
+`
+
+})
+
 }
 
-function analyticsCards(tv,td,fl,total){
-  const c = (v,cl,lbl) => `<div class="rounded-lg p-3 border bg-white"><div class="text-xs font-semibold ${cl.replace('text-','text-').replace('600','500')} uppercase tracking-wide">${lbl}</div><div class="text-2xl font-black ${cl} mt-1">${v}</div></div>`;
-  return c(tv,'text-red-600','Total Variance Units') +
-         c('$'+td.toFixed(0),'text-red-600','Est. $ Loss') +
-         c(fl,'text-orange-500','Flagged Shifts') +
-         c(total,'text-blue-700','Total Shifts');
+
+
+/* ANALYTICS */
+
+async function loadAnalytics(){
+
+const {data}=await sb.from("shift_logs").select("*")
+
+document.getElementById("analyticsBox").innerText=
+"Total Scans Logged: "+data.length
+
 }
 
-function prodTable(products, varByProd){
-  const rows = products.map(p=>{
-    const tv = varByProd[p.id]||0;
-    const td = (tv * p.price).toFixed(2);
-    const level = tv>=6?'HIGH' : tv>=2?'MEDIUM' : 'LOW';
-    const badgeCls = {HIGH:'badge-r', MEDIUM:'badge-y', LOW:'badge-g'}[level];
-    return `<tr><td class="py-1.5 pr-4 text-sm font-medium">${p.name}</td>
-      <td class="py-1.5 px-3 text-center text-sm font-bold ${tv>0?'text-red-600':'text-green-600'}">${tv}</td>
-      <td class="py-1.5 px-3 text-center text-sm text-red-600">$${td}</td>
-      <td class="py-1.5 text-center"><span class="${badgeCls} text-xs px-2 py-0.5 rounded-full">${level}</span></td></tr>`;
-  }).join('');
-  return `<table class="w-full text-sm mt-2"><thead><tr class="text-xs text-gray-500 text-left">
-    <th class="pb-2 pr-4">Product / Game</th>
-    <th class="pb-2 px-3 text-center">Variance</th>
-    <th class="pb-2 px-3 text-center">Est. $ Loss</th>
-    <th class="pb-2 text-center">Alert</th>
-  </tr></thead><tbody>${rows}</tbody></table>`;
-}
-
-// ═══════════════════════════════════════════════════
-// STORES TAB (unchanged from previous version – uses shiftLog stats)
-// ═══════════════════════════════════════════════════
-function onStoreChange(){
-  if(!document.getElementById('tab-review').classList.contains('hidden')) renderReview(revSub);
-}
-
-function renderStores(){
-  // Same as before – uses shiftLog to compute stats. We'll keep it as is; it uses kratom/lottery correctly.
-  // (Full implementation omitted for brevity, but included in the final file)
-}
-
-// ═══════════════════════════════════════════════════
-// AUTH, ADMIN, ITEMS (unchanged – we include minimal stubs)
-// ═══════════════════════════════════════════════════
-let users = [], districts = [], session = null;
-const ADMIN_CRED = {id:'__admin__',username:'admin',password:'Keith2024!',name:'Administrator',role:'admin'};
-
-async function loadAuth(){ /* same as before */ }
-function loadSession(){ const d=sessionStorage.getItem('ss_sess');if(d)session=JSON.parse(d); }
-function saveSession(){ if(session)sessionStorage.setItem('ss_sess',JSON.stringify(session));else sessionStorage.removeItem('ss_sess'); }
-function doLogin(e){ /* same */ }
-function doLogout(){ /* same */ }
-function onLoginSuccess(){ /* same */ }
-function canAccess(tab){ /* same */ }
-function applyRoleUI(){ /* same */ }
-function showTab(name){ /* same but with updated review/log/analytics calls */ }
-// ... and all admin functions (users, districts, items) are identical to previous version.
-// For space, we'll include them in the final file, but here we'll note that they are present.
-
-// ═══════════════════════════════════════════════════
-// ITEMS MANAGEMENT
-// ═══════════════════════════════════════════════════
-async function loadItems() {
-  const { data, error } = await sb.from('items').select('*').order('sort_order');
-  if (error) { console.error('loadItems', error); return; }
-  if (data && data.length) {
-    KRATOM.length = 0; SCRATCHERS.length = 0;
-    data.forEach(r => {
-      const item = { id: r.id, name: r.name, price: parseFloat(r.price) };
-      if (r.category === 'kratom') KRATOM.push(item);
-      else SCRATCHERS.push(item);
-    });
-  } else {
-    KRATOM_DEFAULTS.forEach(x => KRATOM.push({...x}));
-    SCRATCHERS_DEFAULTS.forEach(x => SCRATCHERS.push({...x}));
-    await saveItems();
-  }
-}
-async function saveItems(){ /* same */ }
-// ... other item functions (renderItemsTables, showItemForm, saveItem, deleteItem, resetItemsToDefaults)
-
-// ═══════════════════════════════════════════════════
-// CLOCK
-// ═══════════════════════════════════════════════════
-function tick(){
-  const el=document.getElementById('hdrClock');
-  if(!el) return;
-  const n=new Date();
-  el.textContent = n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) + ' · ' + n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
-}
-
-// ═══════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════
-async function init(){
-  loadSession();
-  const loginBtn = document.querySelector('#loginScreen button[type=submit]');
-  const loginErr = document.getElementById('loginError');
-  if(loginBtn){ loginBtn.disabled=true; loginBtn.textContent='Connecting…'; }
-
-  try {
-    await Promise.all([loadAuth(), loadState(), loadItems()]);
-  } catch(e){
-    console.error('Init failed:', e);
-    if(loginErr){ loginErr.textContent='Could not connect to database. Check your connection.'; loginErr.classList.remove('hidden'); }
-    if(loginBtn){ loginBtn.disabled=false; loginBtn.textContent='Sign In'; }
-    document.getElementById('loginScreen').classList.remove('hidden');
-    return;
-  }
-
-  if(loginBtn){ loginBtn.disabled=false; loginBtn.textContent='Sign In'; }
-
-  if(!shiftLog.length){ seedDemo(); await saveState(); }
-
-  if(session){
-    onLoginSuccess();
-  } else {
-    document.getElementById('loginScreen').classList.remove('hidden');
-  }
-}
-
-tick();
-setInterval(tick,30000);
-init();
 </script>
+
 </body>
 </html>
