@@ -1,364 +1,1926 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Shrink Shield</title>
-
+<title>Shrink Shield — Keith's Superstores</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://unpkg.com/@zxing/library@latest"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<style>
+  :root{--kb:#003087;--kr:#C8102E;}
+  body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;}
+  .tab-btn{transition:all .2s;}
+  .tab-btn.active{background:#003087;color:#fff;border-bottom:3px solid #C8102E;}
+  .tab-btn:not(.active):hover{background:#e2e8f0;}
+  .sub-btn{transition:all .15s;border-bottom:2px solid transparent;}
+  .sub-btn.active{color:#003087;border-bottom:2px solid #003087;font-weight:700;}
+  .badge-g{background:#dcfce7;color:#166534;}
+  .badge-y{background:#fef9c3;color:#854d0e;}
+  .badge-r{background:#fee2e2;color:#991b1b;}
+  .badge-b{background:#dbeafe;color:#1e40af;}
+  .flag-row{background:#fff1f2!important;}
+  input[type=number]{-moz-appearance:textfield;}
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  .chart-wrap{position:relative;height:250px;}
+  table{border-collapse:collapse;}
+  thead tr{border-bottom:2px solid #003087;}
+  tbody tr{border-bottom:1px solid #e5e7eb;}
+  tbody tr:hover{background:#f8fafc;}
+  select{background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");background-repeat:no-repeat;background-position:right .5rem center;background-size:12px;padding-right:2rem!important;appearance:none;}
+</style>
 </head>
+<body>
 
-<body class="bg-gray-100">
-
-<!-- LOGIN -->
-
-<div id="loginScreen" class="flex items-center justify-center h-screen">
-
-<div class="bg-white p-6 rounded shadow w-80">
-
-<h1 class="text-xl font-bold text-center mb-4">Shrink Shield</h1>
-
-<input id="loginUser" placeholder="Username" class="border p-2 w-full mb-2">
-<input id="loginPass" type="password" placeholder="Password" class="border p-2 w-full mb-4">
-
-<button onclick="login()" class="bg-blue-600 text-white w-full p-2 rounded">
-Sign In
-</button>
-
+<!-- ═══════════════════ LOGIN SCREEN ═══════════════════ -->
+<div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center" style="background:#003087;">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm mx-4">
+    <div class="text-center mb-6">
+      <img src="logo.png" onerror="this.style.display='none'" class="h-20 mx-auto mb-2 rounded" id="loginLogo">
+      <div class="mb-2">
+        <div style="color:#003087;font-weight:900;font-size:22px;letter-spacing:2px;">KEITH'S</div>
+        <div style="color:#C8102E;font-weight:900;font-size:14px;letter-spacing:1px;">SUPERSTORES</div>
+      </div>
+      <div class="text-xl font-black tracking-widest text-gray-800">SHRINK SHIELD</div>
+      <div class="text-xs text-gray-400 mt-0.5">Loss Prevention System</div>
+    </div>
+    <form onsubmit="doLogin(event)" class="space-y-3">
+      <div>
+        <label class="lbl">USERNAME</label>
+        <input id="loginUser" type="text" autocomplete="username" placeholder="Enter username"
+          class="inp w-full" autofocus>
+      </div>
+      <div>
+        <label class="lbl">PASSWORD</label>
+        <input id="loginPass" type="password" autocomplete="current-password" placeholder="Enter password"
+          class="inp w-full">
+      </div>
+      <div id="loginError" class="hidden text-red-600 text-sm text-center bg-red-50 rounded p-2"></div>
+      <button type="submit" style="background:#003087;"
+        class="w-full py-2.5 rounded-lg text-white font-bold text-sm hover:opacity-90 transition mt-1">
+        Sign In
+      </button>
+    </form>
+    <div class="text-center text-xs text-gray-400 mt-4">v4.0 · Keith's Superstores</div>
+  </div>
 </div>
-</div>
 
-
-<!-- APP -->
-
+<!-- ═══════════════════ APP (hidden until login) ═══════════════════ -->
 <div id="appScreen" class="hidden">
 
-<!-- NAV BAR -->
-
-<div class="bg-black text-white p-3 flex gap-4">
-
-<button onclick="showPage('scanner')">Scanner</button>
-<button onclick="showPage('manual')">Manual</button>
-<button onclick="showPage('inventory')">Inventory</button>
-<button onclick="showPage('analytics')">Analytics</button>
-<button onclick="showPage('admin')">Admin</button>
-
-</div>
-
-
-<div class="p-4 space-y-4">
-
-<!-- STORE -->
-
-<div class="bg-white p-4 rounded shadow">
-
-<select id="storeSelect" class="border p-2 w-full"></select>
-
-</div>
-
-
-<!-- SCANNER PAGE -->
-
-<div id="scannerPage">
-
-<div class="bg-white p-4 rounded shadow">
-
-<h2 class="font-bold mb-2">Scanner</h2>
-
-<video id="scanner" class="w-full rounded"></video>
-
-<button onclick="startScanner()" class="mt-2 bg-green-600 text-white px-4 py-2 rounded">
-Start Scanner
-</button>
-
-<input id="barcodeResult" class="border p-2 w-full mt-2">
-
-<input id="scanQty" type="number" value="1" class="border p-2 w-full mt-2">
-
-<button onclick="saveScan()" class="mt-2 bg-blue-600 text-white px-4 py-2 rounded">
-Save Scan
-</button>
-
-</div>
-
-</div>
-
-
-<!-- MANUAL PAGE -->
-
-<div id="manualPage" class="hidden">
-
-<div class="bg-white p-4 rounded shadow">
-
-<h2 class="font-bold mb-2">Manual Entry</h2>
-
-<input id="manualBarcode" placeholder="Barcode" class="border p-2 w-full mb-2">
-
-<input id="manualName" placeholder="Item Name" class="border p-2 w-full mb-2">
-
-<input id="manualPrice" placeholder="Price" class="border p-2 w-full mb-2">
-
-<input id="manualQty" type="number" value="1" class="border p-2 w-full mb-2">
-
-<button onclick="saveManual()" class="bg-blue-600 text-white px-4 py-2 rounded">
-Save Item
-</button>
-
-</div>
-
-</div>
-
-
-<!-- INVENTORY PAGE -->
-
-<div id="inventoryPage" class="hidden">
-
-<div class="bg-white p-4 rounded shadow">
-
-<h2 class="font-bold mb-2">Inventory</h2>
-
-<table class="w-full">
-
-<thead>
-<tr class="border-b">
-<th>Barcode</th>
-<th>Name</th>
-<th>Qty</th>
-</tr>
-</thead>
-
-<tbody id="inventoryTable"></tbody>
-
-</table>
-
-<button onclick="loadInventory()" class="mt-3 bg-gray-700 text-white px-3 py-1 rounded">
-Refresh
-</button>
-
-</div>
-
-</div>
-
-
-<!-- ANALYTICS PAGE -->
-
-<div id="analyticsPage" class="hidden">
-
-<div class="bg-white p-4 rounded shadow">
-
-<h2 class="font-bold mb-2">Analytics</h2>
-
-<div id="analyticsBox"></div>
-
-</div>
-
-</div>
-
-
-<!-- ADMIN PAGE -->
-
-<div id="adminPage" class="hidden">
-
-<div class="bg-white p-4 rounded shadow">
-
-<h2 class="font-bold mb-2">Admin Panel</h2>
-
-<button onclick="loadInventory()" class="bg-purple-600 text-white px-3 py-1 rounded">
-Load Inventory
-</button>
-
-</div>
-
-</div>
-
-</div>
-</div>
-
-
+<!-- ═══════════════════ HEADER ═══════════════════ -->
+<header style="background:#003087;" class="shadow-lg sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-3 py-2 flex flex-wrap items-center gap-2">
+
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <img src="logo.png" onerror="this.style.display='none';document.getElementById('logoText').classList.remove('hidden');" class="h-10 rounded">
+      <div id="logoText" class="hidden bg-white rounded px-1.5 py-0.5 text-center leading-tight">
+        <div style="color:#003087;font-weight:900;font-size:10px;letter-spacing:.5px;">KEITH'S</div>
+        <div style="color:#C8102E;font-weight:900;font-size:8px;letter-spacing:.3px;">SUPERSTORES</div>
+      </div>
+      <div>
+        <div class="text-lg font-black tracking-widest text-white">SHRINK SHIELD</div>
+        <div class="text-xs text-blue-200 leading-tight">Loss Prevention System</div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2 ml-auto flex-wrap">
+      <div id="userChip" class="hidden flex items-center gap-1.5 bg-blue-800 rounded-full px-3 py-1"></div>
+      <select id="storeSelect" onchange="onStoreChange()"
+        class="text-xs bg-blue-900 text-white border border-blue-700 rounded px-2 py-1.5 w-64">
+        <optgroup label="── Hattiesburg Area ──">
+          <option value="s135">#135 — 5331 Old Hwy 11, Hattiesburg</option>
+          <option value="s137">#137 — 5170 W. 4th St., Hattiesburg</option>
+          <option value="s150">#150 — 6750 Hwy 49, Hattiesburg</option>
+          <option value="s151">#151 — 7276 Hwy 49, Hattiesburg</option>
+          <option value="s157">#157 — 2462 US Hwy 49, Hattiesburg</option>
+          <option value="s173">#173 — 1858 Evelyn Gandy Pkwy, Hattiesburg</option>
+          <option value="s175">#175 — 101 Carterville Rd, Petal</option>
+        </optgroup>
+        <optgroup label="── Pine Belt ──">
+          <option value="s100">#100 — 304 Hill St., Ellisville</option>
+          <option value="s105">#105 — 5213 Hwy 11 N., Ellisville</option>
+          <option value="sMos">Moselle — 59 Moselle Seminary Rd.</option>
+          <option value="s117">#117 — 2675 Hwy 15, Bay Springs</option>
+          <option value="s125">#125 — 2078 US Hwy 49, Seminary</option>
+          <option value="s127">#127 — 3030 Hwy 49, Collins</option>
+          <option value="s130">#130 — 1475 Hwy 98 E., Columbia</option>
+          <option value="s140">#140 — 1196 Rock Hill Rd., Mount Olive</option>
+          <option value="s155">#155 — 8431 Hwy 98, Sumrall</option>
+          <option value="s185">#185 — 918 E. Main Ave, Lumberton</option>
+        </optgroup>
+        <optgroup label="── Gulf Coast ──">
+          <option value="s082">#82 — 21000 Hwy 613, Moss Point</option>
+          <option value="s085">#85 — 6820 Hwy 613, Moss Point</option>
+          <option value="s086">#86 — 6718 Hwy 63, Moss Point</option>
+          <option value="s088">#88 — 10909 Hwy 57, Vancleave</option>
+          <option value="s089">#89 — 7501 Washington Ave, Ocean Springs</option>
+          <option value="s090">#90 — Ocean Springs</option>
+          <option value="s107">#107 — 26181 Hwy 49 S., Saucier</option>
+          <option value="s108">#108 — 19000 28th St., Long Beach</option>
+          <option value="s109">#109 — 102 E Beach Blvd, Pass Christian</option>
+          <option value="s112">#112 — 819 Hwy 90, Gautier</option>
+          <option value="s182">#182 — 10513 Hwy 603, Waveland</option>
+          <option value="s183">#183 — 701 Hwy 90, Bay St. Louis</option>
+          <option value="s184">#184 — 4955 Hwy 90, Bay St. Louis</option>
+        </optgroup>
+        <optgroup label="── South MS ──">
+          <option value="s080">#80 — 6239 Hwy 98, Lucedale</option>
+          <option value="s081">#81 — 7292 Hwy 63 S., Lucedale</option>
+          <option value="s091">#91 — 1220 W. Central Ave., Wiggins</option>
+          <option value="s120">#120 — 5812 Hwy 11, Purvis</option>
+          <option value="s122">#122 — 5791 Hwy 11, Purvis</option>
+          <option value="s123">#123 — 361 Hwy 589, Purvis</option>
+          <option value="s160">#160 — 114 Magnolia Dr., Wiggins</option>
+          <option value="s161">#161 — 3333 Hwy 49, Wiggins</option>
+          <option value="s192">#192 — 1405 Hwy 43 N., Picayune</option>
+          <option value="s194">#194 — 498 W. Union Rd., Carriere</option>
+          <option value="s196">#196 — 4670 Hwy 53, Poplarville</option>
+        </optgroup>
+        <optgroup label="── Alabama ──">
+          <option value="s060">#60 — 13515 Moffett Rd, Wilmer, AL</option>
+        </optgroup>
+      </select>
+      <div id="hdrClock" class="text-xs text-blue-200 hidden sm:block text-right"></div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════ MAIN ═══════════════════ -->
+<div class="max-w-7xl mx-auto px-3 pt-3 pb-10">
+
+  <!-- Tab Bar -->
+  <div class="flex gap-1 bg-white rounded-t-xl shadow px-1 pt-1">
+    <button class="tab-btn active flex-1 py-2 px-1 rounded-t-lg text-xs font-bold" onclick="showTab('count')">COUNT</button>
+    <button class="tab-btn flex-1 py-2 px-1 rounded-t-lg text-xs font-bold" onclick="showTab('review')">REVIEW</button>
+    <button class="tab-btn flex-1 py-2 px-1 rounded-t-lg text-xs font-bold" onclick="showTab('log')">LOG</button>
+    <button class="tab-btn flex-1 py-2 px-1 rounded-t-lg text-xs font-bold" onclick="showTab('analytics')">ANALYTICS</button>
+    <button class="tab-btn flex-1 py-2 px-1 rounded-t-lg text-xs font-bold" onclick="showTab('stores')">STORES</button>
+    <button id="adminTabBtn" class="tab-btn hidden flex-1 py-2 px-1 rounded-t-lg text-xs font-bold" onclick="showTab('admin')">ADMIN</button>
+  </div>
+
+  <div class="bg-white rounded-b-xl shadow-lg p-4">
+
+  <!-- ╔══════════════ COUNT TAB ══════════════╗ -->
+  <div id="tab-count">
+
+    <!-- Shift header -->
+    <div class="flex flex-wrap gap-2 mb-4 items-end">
+      <div><label class="lbl">SHIFT</label>
+        <select id="shiftSel" class="inp w-32">
+          <option>Morning</option><option>Afternoon</option><option>Evening</option><option>Night</option>
+        </select>
+      </div>
+      <div><label class="lbl">DATE</label>
+        <input id="shiftDate" type="date" class="inp w-36">
+      </div>
+      <div><label class="lbl">OUTGOING CLERK</label>
+        <input id="outClerk" type="text" placeholder="Name" class="inp w-36">
+      </div>
+      <div><label class="lbl">INCOMING CLERK</label>
+        <input id="inClerk" type="text" placeholder="Name" class="inp w-36">
+      </div>
+      <div class="ml-auto flex gap-2 items-end">
+        <button onclick="clearCount()" class="px-3 py-1.5 border rounded text-sm text-gray-600 hover:bg-gray-100">Clear</button>
+        <button onclick="submitCount()" style="background:#003087;"
+          class="px-4 py-1.5 rounded text-sm font-bold text-white hover:opacity-90">Submit Shift Count</button>
+      </div>
+    </div>
+
+    <!-- Info bar -->
+    <div class="text-xs bg-blue-50 border border-blue-200 rounded p-2.5 mb-3 text-gray-600">
+      <strong>Verification formula:</strong> Begin Count &minus; Total Sales for Shift &minus; End Count = Variance.
+      Any positive variance = unaccounted shrinkage. Negative = overage.
+    </div>
+
+    <!-- Sub-tabs -->
+    <div class="flex gap-4 border-b mb-4">
+      <button class="sub-btn active pb-2 text-sm" id="countTabKratom" onclick="showCountSub('kratom')">KRATOM</button>
+      <button class="sub-btn pb-2 text-sm text-gray-500" id="countTabLottery" onclick="showCountSub('lottery')">SCRATCH-OFFS</button>
+    </div>
+
+    <!-- KRATOM sub-table -->
+    <div id="sub-kratom">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead><tr class="text-xs text-gray-500 text-left">
+            <th class="pb-2 pr-3 w-52">PRODUCT</th>
+            <th class="pb-2 px-2 text-center">PRICE</th>
+            <th class="pb-2 px-2 text-center">BEGIN<br><span class="font-normal">Count</span></th>
+            <th class="pb-2 px-2 text-center">SALES<br><span class="font-normal">For Shift</span></th>
+            <th class="pb-2 px-2 text-center">END<br><span class="font-normal">Count</span></th>
+            <th class="pb-2 px-2 text-center">EXPECTED<br><span class="font-normal">End</span></th>
+            <th class="pb-2 px-2 text-center">VARIANCE</th>
+            <th class="pb-2 text-center">STATUS</th>
+          </tr></thead>
+          <tbody id="kratomBody"></tbody>
+        </table>
+      </div>
+      <div id="kratomSummary" class="hidden mt-3"></div>
+    </div>
+
+    <!-- SCRATCH-OFFS sub-table -->
+    <div id="sub-lottery" class="hidden">
+      <div class="text-xs bg-yellow-50 border border-yellow-200 rounded p-2.5 mb-3 text-gray-600">
+        <strong>How to count:</strong> Enter the ticket number (or tickets remaining in roll) at <em>Open</em> and <em>Close</em>.
+        The system calculates tickets sold = Open &minus; Close, then compares to register <em>Sales for Shift</em>.
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead><tr class="text-xs text-gray-500 text-left">
+            <th class="pb-2 pr-3 w-52">GAME</th>
+            <th class="pb-2 px-2 text-center">TICKET<br><span class="font-normal">Price</span></th>
+            <th class="pb-2 px-2 text-center">OPEN<br><span class="font-normal">Count</span></th>
+            <th class="pb-2 px-2 text-center">SALES<br><span class="font-normal">For Shift</span></th>
+            <th class="pb-2 px-2 text-center">CLOSE<br><span class="font-normal">Count</span></th>
+            <th class="pb-2 px-2 text-center">COUNTED<br><span class="font-normal">Sold</span></th>
+            <th class="pb-2 px-2 text-center">VARIANCE</th>
+            <th class="pb-2 text-center">STATUS</th>
+          </tr></thead>
+          <tbody id="lotteryBody"></tbody>
+        </table>
+      </div>
+      <div id="lotterySummary" class="hidden mt-3"></div>
+    </div>
+
+  </div><!-- /tab-count -->
+
+  <!-- ╔══════════════ REVIEW TAB ══════════════╗ -->
+  <div id="tab-review" class="hidden">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-bold text-gray-700">Last Shift Review</h2>
+      <div class="flex gap-2">
+        <button class="sub-btn active text-sm pb-1" id="revTabK" onclick="showRevSub('kratom')">Kratom</button>
+        <button class="sub-btn text-sm pb-1 text-gray-500" id="revTabL" onclick="showRevSub('lottery')">Scratch-Offs</button>
+      </div>
+    </div>
+    <div id="reviewContent"></div>
+  </div>
+
+  <!-- ╔══════════════ LOG TAB ══════════════╗ -->
+  <div id="tab-log" class="hidden">
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+      <h2 class="font-bold text-gray-700">Shift History</h2>
+      <div class="flex gap-2">
+        <select id="logStore" class="border rounded px-2 py-1 text-xs" onchange="renderLog()">
+          <option value="">All Stores</option>
+        </select>
+        <select id="logType" class="border rounded px-2 py-1 text-xs" onchange="renderLog()">
+          <option value="">All Types</option>
+          <option value="kratom">Kratom Only</option>
+          <option value="lottery">Scratch-Off Only</option>
+        </select>
+      </div>
+    </div>
+    <div id="logContent"></div>
+  </div>
+
+  <!-- ╔══════════════ ANALYTICS TAB ══════════════╗ -->
+  <div id="tab-analytics" class="hidden">
+    <div class="flex gap-4 border-b mb-5">
+      <button class="sub-btn active pb-2 text-sm" id="anTabK" onclick="showAnSub('kratom')">KRATOM ANALYTICS</button>
+      <button class="sub-btn pb-2 text-sm text-gray-500" id="anTabL" onclick="showAnSub('lottery')">SCRATCH-OFF ANALYTICS</button>
+    </div>
+
+    <!-- Kratom analytics -->
+    <div id="an-kratom">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5" id="kCards"></div>
+      <div class="grid md:grid-cols-2 gap-4 mb-5">
+        <div class="bg-gray-50 rounded-lg p-4">
+          <div class="text-xs font-semibold text-gray-500 mb-2">Variance by Product</div>
+          <div class="chart-wrap"><canvas id="kChartBar"></canvas></div>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-4">
+          <div class="text-xs font-semibold text-gray-500 mb-2">Shrinkage Trend (by date)</div>
+          <div class="chart-wrap"><canvas id="kChartLine"></canvas></div>
+        </div>
+      </div>
+      <div class="overflow-x-auto" id="kProdTable"></div>
+    </div>
+
+    <!-- Lottery analytics -->
+    <div id="an-lottery" class="hidden">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5" id="lCards"></div>
+      <div class="grid md:grid-cols-2 gap-4 mb-5">
+        <div class="bg-gray-50 rounded-lg p-4">
+          <div class="text-xs font-semibold text-gray-500 mb-2">Variance by Scratch-Off Game</div>
+          <div class="chart-wrap"><canvas id="lChartBar"></canvas></div>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-4">
+          <div class="text-xs font-semibold text-gray-500 mb-2">Lottery Shrinkage Trend</div>
+          <div class="chart-wrap"><canvas id="lChartLine"></canvas></div>
+        </div>
+      </div>
+      <div class="overflow-x-auto" id="lProdTable"></div>
+    </div>
+  </div>
+
+  <!-- ╔══════════════ STORES TAB ══════════════╗ -->
+  <div id="tab-stores" class="hidden">
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+      <h2 class="font-bold text-gray-700">All Keith's Locations</h2>
+      <div class="flex gap-2 items-center">
+        <select id="storeRegionFilter" class="border rounded px-2 py-1 text-xs" onchange="renderStores()">
+          <option value="">All Regions</option>
+          <option value="Hattiesburg">Hattiesburg</option>
+          <option value="Pine Belt">Pine Belt</option>
+          <option value="Gulf Coast">Gulf Coast</option>
+          <option value="South MS">South MS</option>
+          <option value="Alabama">Alabama</option>
+        </select>
+        <select id="storeStatusFilter" class="border rounded px-2 py-1 text-xs" onchange="renderStores()">
+          <option value="">All Status</option>
+          <option value="ALERT">Alert</option>
+          <option value="WATCH">Watch</option>
+          <option value="CLEAN">Clean</option>
+        </select>
+      </div>
+    </div>
+    <div id="storeGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+  </div>
+
+  <!-- ╔══════════════ ADMIN TAB ══════════════╗ -->
+  <div id="tab-admin" class="hidden">
+    <div class="flex gap-4 border-b mb-5">
+      <button class="sub-btn active pb-2 text-sm" id="adTabU" onclick="showAdSub('users')">USERS</button>
+      <button class="sub-btn pb-2 text-sm text-gray-500" id="adTabD" onclick="showAdSub('districts')">DISTRICTS</button>
+      <button class="sub-btn pb-2 text-sm text-gray-500" id="adTabI" onclick="showAdSub('items')">ITEMS</button>
+    </div>
+
+    <!-- USERS sub -->
+    <div id="ad-users">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-gray-700">User Accounts</h3>
+        <button onclick="showUserForm()" style="background:#003087;"
+          class="px-3 py-1.5 rounded text-xs text-white font-bold">+ Add User</button>
+      </div>
+      <!-- Add/Edit form (hidden by default) -->
+      <div id="userForm" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+        <div class="font-bold text-sm text-gray-700 mb-3" id="userFormTitle">Add User</div>
+        <input type="hidden" id="ufId">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
+          <div><label class="lbl">FULL NAME</label><input id="ufName" class="inp w-full" placeholder="Jane Smith"></div>
+          <div><label class="lbl">USERNAME</label><input id="ufUser" class="inp w-full" placeholder="jane.smith"></div>
+          <div><label class="lbl">PASSWORD</label><input id="ufPass" type="password" class="inp w-full" placeholder="••••••••"></div>
+          <div><label class="lbl">ROLE</label>
+            <select id="ufRole" class="inp w-full" onchange="ufRoleChange()">
+              <option value="employee">Employee</option>
+              <option value="store_leader">Store Leader</option>
+              <option value="dm">District Manager</option>
+            </select>
+          </div>
+          <div id="ufDistrictWrap" class="hidden">
+            <label class="lbl">DISTRICT</label>
+            <select id="ufDistrict" class="inp w-full"><option value="">— Unassigned —</option></select>
+          </div>
+          <div id="ufStoreWrap">
+            <label class="lbl">STORE</label>
+            <select id="ufStore" class="inp w-full"><option value="">— Select Store —</option></select>
+          </div>
+        </div>
+        <div id="ufError" class="hidden text-red-600 text-xs mb-2"></div>
+        <div class="flex gap-2">
+          <button onclick="saveUser()" style="background:#003087;" class="px-4 py-1.5 rounded text-xs text-white font-bold">Save</button>
+          <button onclick="hideUserForm()" class="px-4 py-1.5 border rounded text-xs text-gray-600">Cancel</button>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm" id="usersTable">
+          <thead><tr class="text-xs text-gray-500 text-left">
+            <th class="pb-2 pr-4">Name</th>
+            <th class="pb-2 pr-4">Username</th>
+            <th class="pb-2 pr-4">Role</th>
+            <th class="pb-2 pr-4">District / Store</th>
+            <th class="pb-2">Actions</th>
+          </tr></thead>
+          <tbody id="usersBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DISTRICTS sub -->
+    <div id="ad-districts" class="hidden">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-gray-700">Districts</h3>
+        <button onclick="showDistrictForm()" style="background:#003087;"
+          class="px-3 py-1.5 rounded text-xs text-white font-bold">+ Add District</button>
+      </div>
+      <div id="districtForm" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+        <div class="font-bold text-sm text-gray-700 mb-3" id="districtFormTitle">Add District</div>
+        <input type="hidden" id="dfId">
+        <div class="grid md:grid-cols-2 gap-3 mb-3">
+          <div><label class="lbl">DISTRICT NAME</label><input id="dfName" class="inp w-full" placeholder="e.g. Hattiesburg District"></div>
+          <div><label class="lbl">DISTRICT MANAGER</label>
+            <select id="dfDm" class="inp w-full"><option value="">— Unassigned —</option></select>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="lbl">STORES IN THIS DISTRICT</label>
+          <div id="dfStores" class="border rounded-lg bg-white p-3 max-h-48 overflow-y-auto grid grid-cols-2 md:grid-cols-3 gap-1"></div>
+        </div>
+        <div id="dfError" class="hidden text-red-600 text-xs mb-2"></div>
+        <div class="flex gap-2">
+          <button onclick="saveDistrict()" style="background:#003087;" class="px-4 py-1.5 rounded text-xs text-white font-bold">Save</button>
+          <button onclick="hideDistrictForm()" class="px-4 py-1.5 border rounded text-xs text-gray-600">Cancel</button>
+        </div>
+      </div>
+      <div id="districtsGrid" class="grid md:grid-cols-2 gap-3"></div>
+    </div>
+
+    <!-- ITEMS sub -->
+    <div id="ad-items" class="hidden">
+      <!-- Add/Edit form -->
+      <div id="itemForm" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+        <div class="font-bold text-sm text-gray-700 mb-3" id="itemFormTitle">Add Item</div>
+        <input type="hidden" id="ifCategory">
+        <input type="hidden" id="ifId">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
+          <div class="md:col-span-2"><label class="lbl">ITEM NAME</label><input id="ifName" class="inp w-full" placeholder="e.g. Viva Zen Ultimate"></div>
+          <div><label class="lbl">PRICE ($)</label><input id="ifPrice" type="number" step="0.01" min="0" class="inp w-full" placeholder="0.00"></div>
+        </div>
+        <div id="ifError" class="hidden text-red-600 text-xs mb-2"></div>
+        <div class="flex gap-2">
+          <button onclick="saveItem()" style="background:#003087;" class="px-4 py-1.5 rounded text-xs text-white font-bold">Save</button>
+          <button onclick="hideItemForm()" class="px-4 py-1.5 border rounded text-xs text-gray-600">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Kratom section -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-bold text-gray-700">Kratom Items</h3>
+          <button onclick="showItemForm('kratom')" style="background:#003087;" class="px-3 py-1.5 rounded text-xs text-white font-bold">+ Add Item</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead><tr class="text-xs text-gray-500 text-left">
+              <th class="pb-2 pr-4">Name</th>
+              <th class="pb-2 pr-4">Price</th>
+              <th class="pb-2">Actions</th>
+            </tr></thead>
+            <tbody id="itemsKratomBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Scratch-offs section -->
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-bold text-gray-700">Scratch-Off Games</h3>
+          <button onclick="showItemForm('scratchers')" style="background:#003087;" class="px-3 py-1.5 rounded text-xs text-white font-bold">+ Add Game</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead><tr class="text-xs text-gray-500 text-left">
+              <th class="pb-2 pr-4">Name</th>
+              <th class="pb-2 pr-4">Price</th>
+              <th class="pb-2">Actions</th>
+            </tr></thead>
+            <tbody id="itemsScratchersBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Reset to defaults -->
+      <div class="mt-6 pt-4 border-t">
+        <button onclick="resetItemsToDefaults()" class="px-4 py-1.5 border border-red-300 text-red-600 rounded text-xs hover:bg-red-50">Reset All Items to Defaults</button>
+      </div>
+    </div>
+
+  </div>
+
+  </div><!-- /card -->
+</div><!-- /main -->
+
+<!-- FOOTER -->
+<footer style="background:#003087;" class="text-center text-white text-xs py-3">
+  <span class="opacity-60">Keith's Superstores · </span>
+  <em>"The Fastest And Friendliest"</em>
+  <span class="opacity-60"> · Shrink Shield v4.0</span>
+</footer>
+
+</div><!-- /appScreen -->
+
+<style>
+  .lbl{display:block;font-size:10px;font-weight:700;color:#6b7280;letter-spacing:.05em;margin-bottom:2px;}
+  .inp{display:block;border:1px solid #d1d5db;border-radius:6px;padding:5px 8px;font-size:13px;outline:none;}
+  .inp:focus{border-color:#003087;}
+  .num-inp{width:64px;border:1px solid #d1d5db;border-radius:6px;padding:4px 6px;font-size:13px;text-align:center;outline:none;}
+  .num-inp:focus{border-color:#003087;}
+</style>
 
 <script>
+// ═══════════════════════════════════════════════════
+// DATA DEFINITIONS
+// ═══════════════════════════════════════════════════
 
-/* SUPABASE */
+const KRATOM_DEFAULTS = [
+  {id:'k1', name:'Viva Zen Ultimate',          price:14.99},
+  {id:'k2', name:'Viva Zen Red Top',           price:12.99},
+  {id:'k3', name:'Viva Zen White Top',         price:12.99},
+  {id:'k4', name:'Kryptic Kratom Relaxation',  price:11.99},
+  {id:'k5', name:'Kryptic Kratom Thin',        price:11.99},
+  {id:'k6', name:'Kratom Extract',             price:13.99},
+  {id:'k7', name:'K Shot',                     price:10.99},
+  {id:'k8', name:'Kratom Yellow Cap',          price: 9.99},
+  {id:'k9', name:'Feel Free',                  price:15.99},
+];
+let KRATOM = [];   // will be populated from Supabase
 
-const SUPABASE_URL = "https://ylfsqjbqhewpfiooytlg.supabase.co"
+const SCRATCHERS_DEFAULTS = [
+  {id:'s01', name:'Cash on the Spot',     price:1 },
+  {id:'s02', name:'$1 Lottery Ticket',    price:1 },
+  {id:'s03', name:'Piggy Bank Buck',      price:1 },
+  {id:'s04', name:'3 X Lucky',            price:2 },
+  {id:'s05', name:'Wonder Bucks',         price:2 },
+  {id:'s06', name:'Cruisin the Coast',    price:3 },
+  {id:'s07', name:'Jumbo Bucks',          price:2 },
+  {id:'s08', name:'Lucky Doubler',        price:2 },
+  {id:'s09', name:'Cash Grab',            price:2 },
+  {id:'s10', name:'Emerald Green',        price:3 },
+  {id:'s11', name:'25,000 Mad Money',     price:5 },
+  {id:'s12', name:'Bring the Heat',       price:3 },
+  {id:'s13', name:'Home Run',             price:3 },
+  {id:'s14', name:'Crossword',            price:3 },
+  {id:'s15', name:'Bingo',               price:2 },
+  {id:'s16', name:'5X the Bank',         price:5 },
+  {id:'s17', name:'Lucky Dog',           price:2 },
+  {id:'s18', name:'Blazin Hot BK',       price:3 },
+  {id:'s19', name:'Break the Bank',      price:3 },
+  {id:'s20', name:'Stacks of Cash',      price:2 },
+  {id:'s21', name:'Fun 5s',              price:5 },
+  {id:'s22', name:'20X the Money',       price:5 },
+  {id:'s23', name:'Cashtastic',          price:2 },
+  {id:'s24', name:'Wild Money',          price:2 },
+  {id:'s25', name:'Gold Bar Bingo',      price:3 },
+  {id:'s26', name:'Super Cashword',      price:3 },
+  {id:'s27', name:'Red Hot Cash',        price:3 },
+  {id:'s28', name:"Triple Red 7's",      price:3 },
+  {id:'s29', name:'50X the Money',       price:10},
+  {id:'s30', name:'100,000 Payout',      price:10},
+  {id:'s31', name:"Gold 7's",            price:2 },
+  {id:'s32', name:'Diamond White',       price:2 },
+  {id:'s33', name:'Spectacular Riches',  price:10},
+  {id:'s34', name:'Colossal Cash',       price:10},
+  {id:'s35', name:'Extravaganza',        price:20},
+  {id:'s36', name:'200X Cash Blitz',     price:20},
+  {id:'s37', name:'500,000 Extreme',     price:20},
+];
+let SCRATCHERS = []; // will be populated from Supabase
 
-const SUPABASE_KEY = "YOUR_KEY"
+// ═══════════════════════════════════════════════════
+// SUPABASE CLIENT
+// Required tables (run once in Supabase SQL editor):
+//   shift_logs(id text pk, store, store_name, store_city, date, shift,
+//              out_clerk, in_clerk, kratom jsonb, lottery jsonb, ts bigint)
+//   app_users(id text pk, name, username unique, password, role, district_id, store_id)
+//   districts(id text pk, name, dm_id, store_ids jsonb)
+//   items(id text pk, category, name, price numeric, sort_order int)
+// ═══════════════════════════════════════════════════
+const SUPABASE_URL = 'https://ylfsqjbqhewpfiooytlg.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsZnNxamJxaGV3cGZpb295dGxnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NzQwODQsImV4cCI6MjA4ODM1MDA4NH0.Ssl5J6ktZIVtLd2cq8vH7PWdR4-yZwI5tt4PtXkVqWk';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+// ── Row mappers ──
+function toShiftRow(e){
+  return {id:e.id, store:e.store, store_name:e.storeName, store_city:e.storeCity,
+    date:e.date, shift:e.shift, out_clerk:e.outClerk, in_clerk:e.inClerk,
+    kratom:e.kratom, lottery:e.lottery, ts:e.ts};
+}
+function fromShiftRow(r){
+  return {id:r.id, store:r.store, storeName:r.store_name, storeCity:r.store_city,
+    date:r.date, shift:r.shift, outClerk:r.out_clerk, inClerk:r.in_clerk,
+    kratom:r.kratom||{}, lottery:r.lottery||{}, ts:r.ts};
+}
+function toUserRow(u){
+  return {id:u.id, name:u.name, username:u.username, password:u.password,
+    role:u.role, district_id:u.districtId||null, store_id:u.storeId||null};
+}
+function fromUserRow(r){
+  return {id:r.id, name:r.name, username:r.username, password:r.password,
+    role:r.role, districtId:r.district_id||null, storeId:r.store_id||null};
+}
+function toDistrictRow(d){
+  return {id:d.id, name:d.name, dm_id:d.dmId||null, store_ids:d.storeIds};
+}
+function fromDistrictRow(r){
+  return {id:r.id, name:r.name, dmId:r.dm_id||null, storeIds:r.store_ids||[]};
+}
 
+// ── Shared UI helpers ──
+function showFormError(errEl, msg, err){
+  const detail = err ? (err instanceof TypeError ? 'Network error — please try again.' : err.message) : '';
+  errEl.textContent = msg + (detail ? ': ' + detail : '');
+  errEl.classList.remove('hidden');
+  if(err) console.error(err);
+}
+function upsertChart(instance, canvasId, config){
+  if(instance) instance.destroy();
+  return new Chart(document.getElementById(canvasId), config);
+}
 
+const STORES = [
+  // ── Hattiesburg Area ──
+  {id:'s135',num:'135',name:'Store #135',city:'Hattiesburg, MS',addr:'5331 Old Hwy 11',       phone:'(601) 271-8711',hours:'Mon–Sun 5am–12am',region:'Hattiesburg'},
+  {id:'s137',num:'137',name:'Store #137',city:'Hattiesburg, MS',addr:'5170 W. 4th St.',       phone:'(601) 296-6008',hours:'Sun–Thurs 5am–11pm · Fri–Sat 5am–12am',region:'Hattiesburg'},
+  {id:'s150',num:'150',name:'Store #150',city:'Hattiesburg, MS',addr:'6750 Hwy 49',           phone:'(601) 271-8400',hours:'Mon–Sun 5am–12am',region:'Hattiesburg'},
+  {id:'s151',num:'151',name:'Store #151',city:'Hattiesburg, MS',addr:'7276 Hwy 49',           phone:'(601) 296-6761',hours:'Sun–Thurs 5am–11pm · Fri–Sat 5am–12am',region:'Hattiesburg'},
+  {id:'s157',num:'157',name:'Store #157',city:'Hattiesburg, MS',addr:'2462 US Hwy 49',        phone:'(601) 336-1340',hours:'Mon–Sun 5am–12am',region:'Hattiesburg'},
+  {id:'s173',num:'173',name:'Store #173',city:'Hattiesburg, MS',addr:'1858 Evelyn Gandy Pkwy',phone:'(601) 583-4485',hours:'Mon–Sun 5am–11pm',region:'Hattiesburg'},
+  {id:'s175',num:'175',name:'Store #175',city:'Petal, MS',       addr:'101 Carterville Rd',   phone:'(601) 584-8665',hours:'Mon–Thurs 5am–11pm · Fri–Sat 5am–12am',region:'Hattiesburg'},
+  // ── Pine Belt ──
+  {id:'s100',num:'100',name:'Store #100',city:'Ellisville, MS',  addr:'304 Hill St.',         phone:'(601) 477-9990',hours:'Mon–Sun 5am–12am',region:'Pine Belt'},
+  {id:'s105',num:'105',name:'Store #105',city:'Ellisville, MS',  addr:'5213 Hwy 11 N.',       phone:'(601) 425-3085',hours:'Mon–Sun 5am–12am',region:'Pine Belt'},
+  {id:'sMos',num:'—',  name:'Moselle',   city:'Moselle, MS',     addr:'59 Moselle Seminary Rd',phone:'(601) 582-8330',hours:'Mon–Sun 4am–11pm',region:'Pine Belt'},
+  {id:'s117',num:'117',name:'Store #117',city:'Bay Springs, MS', addr:'2675 Hwy 15',          phone:'(601) 764-4580',hours:'',region:'Pine Belt'},
+  {id:'s125',num:'125',name:'Store #125',city:'Seminary, MS',    addr:'2078 US Hwy 49',       phone:'(601) 722-4323',hours:'Mon–Sun 5am–10pm',region:'Pine Belt'},
+  {id:'s127',num:'127',name:'Store #127',city:'Collins, MS',     addr:'3030 Hwy 49',          phone:'(601) 909-9133',hours:'Sun–Thurs 5am–11pm · Fri–Sat 5am–12am',region:'Pine Belt'},
+  {id:'s130',num:'130',name:'Store #130',city:'Columbia, MS',    addr:'1475 Hwy 98 E.',       phone:'(601) 736-6662',hours:'Sun–Thurs 5am–11pm · Fri–Sat 5am–12am',region:'Pine Belt'},
+  {id:'s140',num:'140',name:'Store #140',city:'Mount Olive, MS', addr:'1196 Rock Hill Rd.',   phone:'(601) 797-4545',hours:'Mon–Sun 5am–11pm',region:'Pine Belt'},
+  {id:'s155',num:'155',name:'Store #155',city:'Sumrall, MS',     addr:'8431 Hwy 98',          phone:'(601) 296-4721',hours:'Sun–Thurs 5am–9pm · Fri–Sat 5am–10pm',region:'Pine Belt'},
+  {id:'s185',num:'185',name:'Store #185',city:'Lumberton, MS',   addr:'918 E. Main Ave',      phone:'(601) 796-2780',hours:'Mon–Sun 5am–11pm',region:'Pine Belt'},
+  // ── Gulf Coast ──
+  {id:'s082',num:'82', name:'Store #82', city:'Moss Point, MS',  addr:'21000 Hwy 613',        phone:'(228) 588-2134',hours:'Mon–Sun 4am–12am',region:'Gulf Coast'},
+  {id:'s085',num:'85', name:'Store #85', city:'Moss Point, MS',  addr:'6820 Hwy 613',         phone:'(228) 474-2556',hours:'Mon–Thurs 3am–11pm · Fri 3am–12am · Sat 5am–12am · Sun 5am–11pm',region:'Gulf Coast'},
+  {id:'s086',num:'86', name:'Store #86', city:'Moss Point, MS',  addr:'6718 Hwy 63',          phone:'(228) 474-0004',hours:'Mon–Sun 4am–12am',region:'Gulf Coast'},
+  {id:'s088',num:'88', name:'Store #88', city:'Vancleave, MS',   addr:'10909 Hwy 57',         phone:'(228) 826-9115',hours:'Mon–Sun 4am–12am',region:'Gulf Coast'},
+  {id:'s089',num:'89', name:'Store #89', city:'Ocean Springs, MS',addr:'7501 Washington Ave', phone:'(228) 872-1955',hours:'Open 24/7',region:'Gulf Coast'},
+  {id:'s090',num:'90', name:'Store #90', city:'Ocean Springs, MS',addr:'',                    phone:'(228) 392-9084',hours:'Open 24/7',region:'Gulf Coast'},
+  {id:'s107',num:'107',name:'Store #107',city:'Saucier, MS',     addr:'26181 Hwy 49 S.',      phone:'(228) 832-0298',hours:'Sun–Thurs 5am–11pm · Fri–Sat 5am–12am',region:'Gulf Coast'},
+  {id:'s108',num:'108',name:'Store #108',city:'Long Beach, MS',  addr:'19000 28th St.',       phone:'(228) 575-6822',hours:'Mon–Sun 5am–12am',region:'Gulf Coast'},
+  {id:'s109',num:'109',name:'Store #109',city:'Pass Christian, MS',addr:'102 E Beach Blvd',   phone:'(228) 452-5651',hours:'Mon–Sun 5am–12am',region:'Gulf Coast'},
+  {id:'s112',num:'112',name:'Store #112',city:'Gautier, MS',     addr:'819 Hwy 90',           phone:'(228) 497-9687',hours:'Mon–Fri 3am–11pm · Sat 4am–12am · Sun 5am–12am',region:'Gulf Coast'},
+  {id:'s182',num:'182',name:'Store #182',city:'Waveland, MS',    addr:'10513 Hwy 603',        phone:'(228) 466-4494',hours:'Mon–Sun 5am–11pm',region:'Gulf Coast'},
+  {id:'s183',num:'183',name:'Store #183',city:'Bay St. Louis, MS',addr:'701 Hwy 90',          phone:'(251) 649-6544',hours:'Mon–Sun 5am–11pm',region:'Gulf Coast'},
+  {id:'s184',num:'184',name:'Store #184',city:'Bay St. Louis, MS',addr:'4955 Hwy 90',         phone:'(228) 466-4336',hours:'Mon–Sun 5am–11pm',region:'Gulf Coast'},
+  // ── South MS ──
+  {id:'s080',num:'80', name:'Store #80', city:'Lucedale, MS',    addr:'6239 Hwy 98',          phone:'(601) 947-7520',hours:'Mon–Sun 5am–12am',region:'South MS'},
+  {id:'s081',num:'81', name:'Store #81', city:'Lucedale, MS',    addr:'7292 Hwy 63 S.',       phone:'(601) 947-8120',hours:'Mon–Sun 5am–12am',region:'South MS'},
+  {id:'s091',num:'91', name:'Store #91', city:'Wiggins, MS',     addr:'1220 W. Central Ave.', phone:'(601) 928-9403',hours:'Sun–Thurs 5am–11pm · Fri–Sat 5am–12am',region:'South MS'},
+  {id:'s120',num:'120',name:'Store #120',city:'Purvis, MS',      addr:'5812 Hwy 11',          phone:'(601) 794-2249',hours:'Mon–Sun 5am–10pm',region:'South MS'},
+  {id:'s122',num:'122',name:'Store #122',city:'Purvis, MS',      addr:'5791 Hwy 11',          phone:'(601) 794-0422',hours:'Mon–Sun 5am–10pm',region:'South MS'},
+  {id:'s123',num:'123',name:'Store #123',city:'Purvis, MS',      addr:'361 Hwy 589',          phone:'(601) 744-0660',hours:'Sun–Thurs 5am–11pm · Fri–Sat 5am–12am',region:'South MS'},
+  {id:'s160',num:'160',name:'Store #160',city:'Wiggins, MS',     addr:'114 Magnolia Dr.',     phone:'(601) 528-9002',hours:'Mon–Sun 5am–11pm',region:'South MS'},
+  {id:'s161',num:'161',name:'Store #161',city:'Wiggins, MS',     addr:'3333 Hwy 49',          phone:'(601) 928-7826',hours:'Mon–Sun 5am–10pm',region:'South MS'},
+  {id:'s192',num:'192',name:'Store #192',city:'Picayune, MS',    addr:'1405 Hwy 43 N.',       phone:'(601) 798-9554',hours:'Sun–Thurs 5am–11pm · Fri–Sat 5am–12am',region:'South MS'},
+  {id:'s194',num:'194',name:'Store #194',city:'Carriere, MS',    addr:'498 W. Union Rd.',     phone:'(601) 889-0394',hours:'Open 24/7',region:'South MS'},
+  {id:'s196',num:'196',name:'Store #196',city:'Poplarville, MS', addr:'4670 Hwy 53',          phone:'(601) 403-8290',hours:'Sun–Thurs 5am–11pm · Fri–Sat 5am–12am',region:'South MS'},
+  // ── Alabama ──
+  {id:'s060',num:'60', name:'Store #60', city:'Wilmer, AL',      addr:'13515 Moffett Rd',     phone:'(251) 649-6544',hours:'Mon–Sun 5am–12am',region:'Alabama'},
+];
 
-/* LOGIN */
+// (log store filter populated after login via applyRoleUI)
 
-async function login(email, password) {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: email,
-    password: password
-  })
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+let shiftLog = [];
 
-  if (error) {
-    alert(error.message)
-    return
+async function saveState(){
+  if(!shiftLog.length) return;
+  const {error} = await sb.from('shift_logs').upsert(shiftLog.map(toShiftRow), {onConflict:'id'});
+  if(error) console.error('saveState', error);
+}
+async function loadState(){
+  const {data, error} = await sb.from('shift_logs').select('*').order('ts', {ascending:false});
+  if(error){ console.error('loadState', error); return; }
+  shiftLog = (data||[]).map(fromShiftRow);
+}
+async function db_insertShift(entry){
+  const {error} = await sb.from('shift_logs').insert([toShiftRow(entry)]);
+  if(error) throw error;
+}
+
+// ═══════════════════════════════════════════════════
+// DEMO DATA
+// ═══════════════════════════════════════════════════
+function seedDemo(){
+  const shifts=['Morning','Afternoon','Evening','Night'];
+  const clerks=['Maria G','Tom B','Sarah K','James L','Nina R','Carlos M','Dana P','Leo W'];
+  const dates=['2026-02-15','2026-02-17','2026-02-19','2026-02-21','2026-02-24','2026-02-26','2026-03-01','2026-03-03','2026-03-05'];
+  // Deliberate shrinkage patterns per store
+  const kShrink={
+    s150:{k9:2,k1:1}, s151:{k9:1,k7:1}, s107:{k9:3,k2:1},
+    s184:{k9:1},      s192:{k6:1,k9:2}, s060:{k7:1,k9:1}
+  };
+  const lShrink={
+    s150:{s29:1,s35:1}, s151:{s36:1},   s107:{s34:2,s29:1},
+    s184:{s35:1},       s192:{s29:1},    s060:{s36:1,s33:1}
+  };
+
+  // Seed 8 representative stores
+  const seedStores=['s150','s151','s135','s107','s184','s192','s060','s105'];
+
+  seedStores.forEach(sid=>{
+    const store=STORES.find(s=>s.id===sid);
+    dates.forEach((date,di)=>{
+      const shift=shifts[di%4];
+      const kratom={}, lottery={};
+
+      KRATOM.forEach(p=>{
+        const begin=Math.floor(Math.random()*15)+4;
+        const sales=Math.floor(Math.random()*4);
+        const shrink=(kShrink[sid]?.[p.id]||0)*(di%3===0?1:0);
+        const end=Math.max(0,begin-sales-shrink);
+        kratom[p.id]={begin,sales,end};
+      });
+
+      SCRATCHERS.forEach(p=>{
+        const open=Math.floor(Math.random()*60)+20;
+        const sales=Math.floor(Math.random()*8);
+        const shrink=(lShrink[sid]?.[p.id]||0)*(di%4===0?1:0);
+        const close=Math.max(0,open-sales-shrink);
+        lottery[p.id]={open,sales,close};
+      });
+
+      shiftLog.push({
+        id:`${sid}_${date}_${shift}`.replace(/\s/g,''),
+        store:sid, storeName:store.name, storeCity:store.city,
+        date, shift,
+        outClerk:clerks[Math.floor(Math.random()*clerks.length)],
+        inClerk: clerks[Math.floor(Math.random()*clerks.length)],
+        kratom, lottery,
+        ts:new Date(`${date}T06:00:00`).getTime()+di*28800000,
+      });
+    });
+  });
+  // saveState() called by caller after seedDemo()
+}
+
+// showTab is defined in the AUTH section below (needs canAccess)
+
+// ═══════════════════════════════════════════════════
+// COUNT SUB-TABS
+// ═══════════════════════════════════════════════════
+function showCountSub(type){
+  document.getElementById('sub-kratom').classList.toggle('hidden', type!=='kratom');
+  document.getElementById('sub-lottery').classList.toggle('hidden', type!=='lottery');
+  document.querySelectorAll('#tab-count .sub-btn').forEach((b,i)=>{
+    b.classList.toggle('active', (i===0&&type==='kratom')||(i===1&&type==='lottery'));
+    b.classList.toggle('text-gray-500', !b.classList.contains('active'));
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// BUILD COUNT TABLES
+// ═══════════════════════════════════════════════════
+function buildCountTables(){
+  // Update sub-tab labels with live counts
+  const ktBtn = document.getElementById('countTabKratom');
+  const ltBtn = document.getElementById('countTabLottery');
+  if(ktBtn) ktBtn.textContent = `KRATOM (${KRATOM.length} items)`;
+  if(ltBtn) ltBtn.textContent = `SCRATCH-OFFS (${SCRATCHERS.length} games)`;
+  // Kratom
+  const kb=document.getElementById('kratomBody');
+  kb.innerHTML='';
+  KRATOM.forEach(p=>{
+    const tr=document.createElement('tr');
+    tr.id=`krow-${p.id}`;
+    tr.innerHTML=`
+      <td class="py-2 pr-3 font-medium text-gray-800">${p.name}</td>
+      <td class="py-2 px-2 text-center text-gray-400 text-xs">$${p.price.toFixed(2)}</td>
+      <td class="py-2 px-1"><input type="number" min="0" id="kb-${p.id}" placeholder="—"
+        class="num-inp" oninput="calcKRow('${p.id}')"></td>
+      <td class="py-2 px-1"><input type="number" min="0" id="ks-${p.id}" placeholder="—"
+        class="num-inp" oninput="calcKRow('${p.id}')"></td>
+      <td class="py-2 px-1"><input type="number" min="0" id="ke-${p.id}" placeholder="—"
+        class="num-inp" oninput="calcKRow('${p.id}')"></td>
+      <td class="py-2 px-2 text-center text-xs font-mono" id="kexp-${p.id}">—</td>
+      <td class="py-2 px-2 text-center font-bold text-xs" id="kvar-${p.id}">—</td>
+      <td class="py-2 text-center" id="kstat-${p.id}">—</td>`;
+    kb.appendChild(tr);
+  });
+
+  // Scratch-offs
+  const lb=document.getElementById('lotteryBody');
+  lb.innerHTML='';
+  SCRATCHERS.forEach(p=>{
+    const tr=document.createElement('tr');
+    tr.id=`lrow-${p.id}`;
+    tr.innerHTML=`
+      <td class="py-2 pr-3 font-medium text-gray-800">${p.name}</td>
+      <td class="py-2 px-2 text-center text-gray-400 text-xs">$${p.price}</td>
+      <td class="py-2 px-1"><input type="number" min="0" id="lo-${p.id}" placeholder="—"
+        class="num-inp" oninput="calcLRow('${p.id}')"></td>
+      <td class="py-2 px-1"><input type="number" min="0" id="ls-${p.id}" placeholder="—"
+        class="num-inp" oninput="calcLRow('${p.id}')"></td>
+      <td class="py-2 px-1"><input type="number" min="0" id="lc-${p.id}" placeholder="—"
+        class="num-inp" oninput="calcLRow('${p.id}')"></td>
+      <td class="py-2 px-2 text-center text-xs font-mono" id="lcnt-${p.id}">—</td>
+      <td class="py-2 px-2 text-center font-bold text-xs" id="lvar-${p.id}">—</td>
+      <td class="py-2 text-center" id="lstat-${p.id}">—</td>`;
+    lb.appendChild(tr);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// LIVE ROW CALCULATIONS
+// ═══════════════════════════════════════════════════
+function calcKRow(id){
+  const bEl=document.getElementById(`kb-${id}`);
+  const begin = parseFloat(bEl.value);
+  const sales = parseFloat(document.getElementById(`ks-${id}`).value)||0;
+  const end   = parseFloat(document.getElementById(`ke-${id}`).value)||0;
+  if(bEl.value===''){
+    ['kexp','kvar','kstat'].forEach(p=>document.getElementById(`${p}-${id}`).textContent='—');
+    document.getElementById(`krow-${id}`).classList.remove('flag-row');
+    return;
+  }
+  const expected = (begin||0) - sales;
+  const variance = expected - end; // positive = shrinkage
+  setVarianceUI({expId:`kexp-${id}`,varId:`kvar-${id}`,statId:`kstat-${id}`,rowId:`krow-${id}`,expected,variance});
+  updateKSummary();
+}
+
+function calcLRow(id){
+  const oEl=document.getElementById(`lo-${id}`);
+  const open  = parseFloat(oEl.value);
+  const sales = parseFloat(document.getElementById(`ls-${id}`).value)||0;
+  const close = parseFloat(document.getElementById(`lc-${id}`).value)||0;
+  const cntEl = document.getElementById(`lcnt-${id}`);
+  if(oEl.value===''){
+    cntEl.textContent='—';
+    ['lvar','lstat'].forEach(p=>document.getElementById(`${p}-${id}`).textContent='—');
+    document.getElementById(`lrow-${id}`).classList.remove('flag-row');
+    return;
+  }
+  const counted = (open||0) - close;
+  cntEl.textContent = counted >= 0 ? counted : `(${Math.abs(counted)})`;
+  const variance = counted - sales; // positive = shrinkage (counted sold > register sales)
+  // For lottery, variance means tickets missing from rolls vs register
+  // expected "close" from formula: open - sales
+  const expected = (open||0) - sales;
+  setVarianceUI({expId:null,varId:`lvar-${id}`,statId:`lstat-${id}`,rowId:`lrow-${id}`,expected,variance});
+  updateLSummary();
+}
+
+function setVarianceUI({expId,varId,statId,rowId,expected,variance}){
+  if(expId) document.getElementById(expId).textContent = expected >= 0 ? expected : `(${Math.abs(expected)})`;
+  const varEl  = document.getElementById(varId);
+  const statEl = document.getElementById(statId);
+  const row    = document.getElementById(rowId);
+  if(variance>0){
+    varEl.textContent=`-${variance}`;
+    varEl.className='py-2 px-2 text-center font-bold text-xs text-red-600';
+    statEl.innerHTML=`<span class="badge-r text-xs px-2 py-0.5 rounded-full font-semibold">FLAGGED</span>`;
+    row.classList.add('flag-row');
+  } else if(variance<0){
+    varEl.textContent=`+${Math.abs(variance)}`;
+    varEl.className='py-2 px-2 text-center font-bold text-xs text-yellow-600';
+    statEl.innerHTML=`<span class="badge-y text-xs px-2 py-0.5 rounded-full font-semibold">OVER</span>`;
+    row.classList.remove('flag-row');
+  } else {
+    varEl.textContent='✓ 0';
+    varEl.className='py-2 px-2 text-center font-bold text-xs text-green-600';
+    statEl.innerHTML=`<span class="badge-g text-xs px-2 py-0.5 rounded-full font-semibold">OK</span>`;
+    row.classList.remove('flag-row');
+  }
+}
+
+function updateKSummary(){
+  let tv=0,td=0,fl=0;
+  KRATOM.forEach(p=>{
+    const b=parseFloat(document.getElementById(`kb-${p.id}`).value);
+    if(isNaN(b)) return;
+    const s=parseFloat(document.getElementById(`ks-${p.id}`).value)||0;
+    const e=parseFloat(document.getElementById(`ke-${p.id}`).value)||0;
+    const v=(b-s)-e;
+    if(v>0){tv+=v;td+=v*p.price;fl++;}
+  });
+  const el=document.getElementById('kratomSummary');
+  el.classList.remove('hidden');
+  el.innerHTML=summaryHTML(tv,td,fl);
+}
+
+function updateLSummary(){
+  let tv=0,td=0,fl=0;
+  SCRATCHERS.forEach(p=>{
+    const o=parseFloat(document.getElementById(`lo-${p.id}`).value);
+    if(isNaN(o)) return;
+    const s=parseFloat(document.getElementById(`ls-${p.id}`).value)||0;
+    const c=parseFloat(document.getElementById(`lc-${p.id}`).value)||0;
+    const v=(o-c)-s;
+    if(v>0){tv+=v;td+=v*p.price;fl++;}
+  });
+  const el=document.getElementById('lotterySummary');
+  el.classList.remove('hidden');
+  el.innerHTML=summaryHTML(tv,td,fl);
+}
+
+function summaryHTML(tv,td,fl){
+  return `<div class="grid grid-cols-3 gap-3">
+    <div class="bg-gray-50 rounded p-3 text-center">
+      <div class="text-xs text-gray-400">Variance Units</div>
+      <div class="text-2xl font-black ${tv>0?'text-red-600':'text-green-600'}">${tv}</div>
+    </div>
+    <div class="bg-gray-50 rounded p-3 text-center">
+      <div class="text-xs text-gray-400">Est. $ Loss</div>
+      <div class="text-2xl font-black ${td>0?'text-red-600':'text-green-600'}">$${td.toFixed(2)}</div>
+    </div>
+    <div class="bg-gray-50 rounded p-3 text-center">
+      <div class="text-xs text-gray-400">Flagged</div>
+      <div class="text-2xl font-black ${fl>0?'text-orange-500':'text-green-600'}">${fl}</div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// CLEAR & SUBMIT
+// ═══════════════════════════════════════════════════
+function clearCount(){
+  KRATOM.forEach(p=>{
+    ['kb','ks','ke'].forEach(f=>document.getElementById(`${f}-${p.id}`).value='');
+    calcKRow(p.id);
+  });
+  SCRATCHERS.forEach(p=>{
+    ['lo','ls','lc'].forEach(f=>document.getElementById(`${f}-${p.id}`).value='');
+    calcLRow(p.id);
+  });
+  document.getElementById('kratomSummary').classList.add('hidden');
+  document.getElementById('lotterySummary').classList.add('hidden');
+}
+
+async function submitCount(){
+  const sid   = document.getElementById('storeSelect').value;
+  const store = STORES.find(s=>s.id===sid)||{name:sid,city:''};
+  const shift = document.getElementById('shiftSel').value;
+  const date  = document.getElementById('shiftDate').value || new Date().toISOString().split('T')[0];
+  const outC  = document.getElementById('outClerk').value.trim();
+  const inC   = document.getElementById('inClerk').value.trim();
+
+  if(!outC||!inC){ alert('Please enter both clerk names.'); return; }
+
+  const kratom={}, lottery={};
+  let kAny=false, lAny=false;
+
+  KRATOM.forEach(p=>{
+    const b=document.getElementById(`kb-${p.id}`).value;
+    if(b==='') return;
+    kAny=true;
+    kratom[p.id]={
+      begin:parseInt(b)||0,
+      sales:parseInt(document.getElementById(`ks-${p.id}`).value)||0,
+      end:  parseInt(document.getElementById(`ke-${p.id}`).value)||0,
+    };
+  });
+
+  SCRATCHERS.forEach(p=>{
+    const o=document.getElementById(`lo-${p.id}`).value;
+    if(o==='') return;
+    lAny=true;
+    lottery[p.id]={
+      open: parseInt(o)||0,
+      sales:parseInt(document.getElementById(`ls-${p.id}`).value)||0,
+      close:parseInt(document.getElementById(`lc-${p.id}`).value)||0,
+    };
+  });
+
+  if(!kAny&&!lAny){ alert('Please enter at least one count.'); return; }
+
+  const entry = {
+    id:`${sid}_${Date.now()}`,
+    store:sid, storeName:store.name, storeCity:store.city,
+    date, shift, outClerk:outC, inClerk:inC,
+    kratom, lottery,
+    ts:Date.now(),
+  };
+  try {
+    await db_insertShift(entry);
+  } catch(e) {
+    console.error(e);
+    alert(e instanceof TypeError ? 'Network error — please check your connection and try again.' : 'Error saving count: ' + e.message);
+    return;
+  }
+  shiftLog.unshift(entry);
+  clearCount();
+  alert(`✓ Count submitted for ${store.name} — ${shift} shift!`);
+  showTab('review');
+}
+
+// ═══════════════════════════════════════════════════
+// REVIEW TAB
+// ═══════════════════════════════════════════════════
+let revSub='kratom';
+function showRevSub(type){
+  revSub=type;
+  document.getElementById('revTabK').classList.toggle('active',type==='kratom');
+  document.getElementById('revTabL').classList.toggle('active',type==='lottery');
+  document.getElementById('revTabK').classList.toggle('text-gray-500',type!=='kratom');
+  document.getElementById('revTabL').classList.toggle('text-gray-500',type!=='lottery');
+  renderReview(type);
+}
+
+function renderReview(type='kratom'){
+  const sid=document.getElementById('storeSelect').value;
+  const entry=[...shiftLog].find(e=>e.store===sid);
+  const el=document.getElementById('reviewContent');
+
+  if(!entry){ el.innerHTML=`<p class="text-gray-400 italic text-sm">No counts for this store yet.</p>`; return; }
+
+  const metaBar=`<div class="flex flex-wrap gap-3 text-xs text-gray-600 bg-gray-50 rounded p-2.5 mb-4">
+    <span><strong>Store:</strong> ${entry.storeName}</span>
+    <span><strong>Date:</strong> ${entry.date}</span>
+    <span><strong>Shift:</strong> ${entry.shift}</span>
+    <span><strong>Out:</strong> ${entry.outClerk}</span>
+    <span><strong>In:</strong> ${entry.inClerk}</span>
+  </div>`;
+
+  if(type==='kratom'){
+    el.innerHTML = metaBar + buildReviewTable(KRATOM, entry.kratom||{},
+      p=>{ const d=entry.kratom?.[p.id]; if(!d)return null;
+           return {open:d.begin,sales:d.sales,close:d.end}; },
+      ['BEGIN','SALES','END','EXP. END','VARIANCE','STATUS']);
+  } else {
+    el.innerHTML = metaBar + buildReviewTable(SCRATCHERS, entry.lottery||{},
+      p=>{ const d=entry.lottery?.[p.id]; if(!d)return null;
+           return {open:d.open,sales:d.sales,close:d.close}; },
+      ['OPEN','SALES','CLOSE','COUNTED SOLD','VARIANCE','STATUS']);
+  }
+}
+
+function buildReviewTable(products, dataObj, getter, headers){
+  let tv=0,td=0,fl=0,rows='';
+  products.forEach(p=>{
+    const d=getter(p);
+    if(!d) return;
+    const {open,sales,close}=d;
+    const counted=open-close;
+    const variance=(open-sales)-close; // = counted - sales for lottery; = begin-sales-end for kratom
+    if(variance>0){tv+=variance;td+=variance*p.price;fl++;}
+    const varClass=variance>0?'text-red-600':variance<0?'text-yellow-600':'text-green-600';
+    const badge=variance>0?`<span class="badge-r text-xs px-2 py-0.5 rounded-full">FLAGGED</span>`
+               :variance<0?`<span class="badge-y text-xs px-2 py-0.5 rounded-full">OVER</span>`
+               :`<span class="badge-g text-xs px-2 py-0.5 rounded-full">OK</span>`;
+    const rowCls=variance>0?'flag-row':'';
+    rows+=`<tr class="${rowCls}">
+      <td class="py-2 pr-3 font-medium text-sm">${p.name}</td>
+      <td class="py-2 px-2 text-center text-sm">${open}</td>
+      <td class="py-2 px-2 text-center text-sm">${sales}</td>
+      <td class="py-2 px-2 text-center text-sm">${close}</td>
+      <td class="py-2 px-2 text-center text-sm font-mono">${open-sales}</td>
+      <td class="py-2 px-2 text-center font-bold text-sm ${varClass}">${variance>0?'-'+variance:variance<0?'+'+Math.abs(variance):'✓ 0'}</td>
+      <td class="py-2 text-center">${badge}</td>
+    </tr>`;
+  });
+
+  return `<div class="grid grid-cols-3 gap-3 mb-4">
+    ${cardHTML('Variance Units',tv,tv>0?'text-red-600':'text-green-600')}
+    ${cardHTML('Est. $ Loss','$'+td.toFixed(2),td>0?'text-red-600':'text-green-600')}
+    ${cardHTML('Flagged Items',fl,fl>0?'text-orange-500':'text-green-600')}
+  </div>
+  <div class="overflow-x-auto"><table class="w-full text-sm">
+    <thead><tr class="text-xs text-gray-500 text-left">
+      <th class="pb-2 pr-3">PRODUCT / GAME</th>
+      ${headers.map(h=>`<th class="pb-2 px-2 text-center">${h}</th>`).join('')}
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+function cardHTML(label,val,cls){
+  return `<div class="bg-gray-50 rounded p-3 text-center">
+    <div class="text-xs text-gray-400">${label}</div>
+    <div class="text-xl font-black mt-1 ${cls}">${val}</div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// LOG TAB
+// ═══════════════════════════════════════════════════
+function renderLog(){
+  const storeF = document.getElementById('logStore').value;
+  const typeF  = document.getElementById('logType').value;
+  const entries=[...shiftLog]
+    .filter(e=>!storeF||e.store===storeF)
+    .sort((a,b)=>b.ts-a.ts)
+    .slice(0,60);
+  const el=document.getElementById('logContent');
+  if(!entries.length){ el.innerHTML=`<p class="text-gray-400 italic text-sm">No logs found.</p>`; return; }
+
+  el.innerHTML=entries.map(e=>{
+    const kFlags=[],lFlags=[];
+    let kDollar=0,lDollar=0;
+
+    if(typeF!=='lottery'){
+      KRATOM.forEach(p=>{
+        const d=e.kratom?.[p.id]; if(!d)return;
+        const v=(d.begin-d.sales)-d.end;
+        if(v>0){kFlags.push(`${p.name}(−${v})`);kDollar+=v*p.price;}
+      });
+    }
+    if(typeF!=='kratom'){
+      SCRATCHERS.forEach(p=>{
+        const d=e.lottery?.[p.id]; if(!d)return;
+        const v=(d.open-d.close)-d.sales;
+        if(v>0){lFlags.push(`${p.name}(−${v})`);lDollar+=v*p.price;}
+      });
+    }
+
+    const totalFlags=kFlags.length+lFlags.length;
+    const totalDollar=kDollar+lDollar;
+    const hasShrink=totalFlags>0;
+    const cls=hasShrink?'border-red-200 bg-red-50':'border-gray-200';
+    const badge=hasShrink
+      ?`<span class="badge-r text-xs px-2 py-0.5 rounded-full">${totalFlags} FLAG${totalFlags>1?'S':''}</span>`
+      :`<span class="badge-g text-xs px-2 py-0.5 rounded-full">CLEAN</span>`;
+
+    return `<div class="border rounded-lg p-3 mb-2 ${cls}">
+      <div class="flex flex-wrap items-start justify-between gap-1">
+        <div>
+          <div class="font-semibold text-sm text-gray-800">${e.storeName} — ${e.shift} Shift</div>
+          <div class="text-xs text-gray-400">${e.date} &nbsp;·&nbsp; Out: ${e.outClerk} &nbsp;·&nbsp; In: ${e.inClerk}</div>
+        </div>
+        <div class="flex items-center gap-2">
+          ${badge}
+          ${hasShrink?`<span class="text-xs text-red-600 font-bold">$${totalDollar.toFixed(2)}</span>`:''}
+        </div>
+      </div>
+      ${kFlags.length?`<div class="mt-2 text-xs bg-red-100 rounded px-2 py-1 text-red-700">Kratom: ${kFlags.join(' · ')}</div>`:''}
+      ${lFlags.length?`<div class="mt-1 text-xs bg-orange-50 rounded px-2 py-1 text-orange-700 border border-orange-200">Scratch-Offs: ${lFlags.join(' · ')}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// ANALYTICS TAB
+// ═══════════════════════════════════════════════════
+let kBar=null,kLine=null,lBar=null,lLine=null;
+
+function showAnSub(type){
+  document.getElementById('an-kratom').classList.toggle('hidden',type!=='kratom');
+  document.getElementById('an-lottery').classList.toggle('hidden',type!=='lottery');
+  document.getElementById('anTabK').classList.toggle('active',type==='kratom');
+  document.getElementById('anTabL').classList.toggle('active',type==='lottery');
+  document.getElementById('anTabK').classList.toggle('text-gray-500',type!=='kratom');
+  document.getElementById('anTabL').classList.toggle('text-gray-500',type!=='lottery');
+  renderAnalytics(type);
+}
+
+function renderAnalytics(type='kratom'){
+  if(type==='kratom') renderKAnalytics();
+  else renderLAnalytics();
+}
+
+function renderKAnalytics(){
+  let tv=0,td=0,fl=0;
+  const varByProd={};
+  const dateMap={};
+  KRATOM.forEach(p=>{varByProd[p.id]=0;});
+
+  shiftLog.forEach(e=>{
+    let shiftF=false;
+    KRATOM.forEach(p=>{
+      const d=e.kratom?.[p.id]; if(!d)return;
+      const v=(d.begin-d.sales)-d.end;
+      if(v>0){tv+=v;td+=v*p.price;varByProd[p.id]+=v;shiftF=true;
+        dateMap[e.date]=(dateMap[e.date]||0)+v;}
+    });
+    if(shiftF)fl++;
+  });
+
+  document.getElementById('kCards').innerHTML=analyticsCards(tv,td,fl,shiftLog.length);
+
+  const pData=KRATOM.map(p=>varByProd[p.id]);
+  kBar=upsertChart(kBar,'kChartBar',{type:'bar',
+    data:{labels:KRATOM.map(p=>p.name.substring(0,14)+'…'),
+      datasets:[{label:'Variance',data:pData,backgroundColor:pData.map(v=>v>3?'#dc2626':v>1?'#f97316':'#16a34a'),borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{ticks:{font:{size:9}}},y:{beginAtZero:true}}}});
+
+  const tDates=Object.keys(dateMap).sort().slice(-14);
+  kLine=upsertChart(kLine,'kChartLine',{type:'line',
+    data:{labels:tDates,datasets:[{label:'Daily Variance',data:tDates.map(d=>dateMap[d]||0),
+      borderColor:'#003087',backgroundColor:'rgba(0,48,135,.1)',fill:true,tension:.3,pointRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,scales:{x:{ticks:{font:{size:9}}},y:{beginAtZero:true}}}});
+
+  document.getElementById('kProdTable').innerHTML=prodTable(KRATOM,varByProd);
+}
+
+function renderLAnalytics(){
+  let tv=0,td=0,fl=0;
+  const varByProd={};
+  const dateMap={};
+  SCRATCHERS.forEach(p=>{varByProd[p.id]=0;});
+
+  shiftLog.forEach(e=>{
+    let shiftF=false;
+    SCRATCHERS.forEach(p=>{
+      const d=e.lottery?.[p.id]; if(!d)return;
+      const v=(d.open-d.close)-d.sales;
+      if(v>0){tv+=v;td+=v*p.price;varByProd[p.id]+=v;shiftF=true;
+        dateMap[e.date]=(dateMap[e.date]||0)+v;}
+    });
+    if(shiftF)fl++;
+  });
+
+  document.getElementById('lCards').innerHTML=analyticsCards(tv,td,fl,shiftLog.length);
+
+  const top10=SCRATCHERS.map(p=>({p,v:varByProd[p.id]})).sort((a,b)=>b.v-a.v).slice(0,12);
+  const tData=top10.map(x=>x.v);
+  lBar=upsertChart(lBar,'lChartBar',{type:'bar',
+    data:{labels:top10.map(x=>x.p.name.substring(0,16)),
+      datasets:[{label:'Variance',data:tData,backgroundColor:tData.map(v=>v>3?'#dc2626':v>1?'#f97316':'#16a34a'),borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{ticks:{font:{size:9}}},y:{beginAtZero:true}}}});
+
+  const dDates=Object.keys(dateMap).sort().slice(-14);
+  lLine=upsertChart(lLine,'lChartLine',{type:'line',
+    data:{labels:dDates,datasets:[{label:'Daily Variance',data:dDates.map(d=>dateMap[d]||0),
+      borderColor:'#C8102E',backgroundColor:'rgba(200,16,46,.1)',fill:true,tension:.3,pointRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,scales:{x:{ticks:{font:{size:9}}},y:{beginAtZero:true}}}});
+
+  document.getElementById('lProdTable').innerHTML=prodTable(SCRATCHERS,varByProd);
+}
+
+function analyticsCards(tv,td,fl,total){
+  const c=(v,cl,lbl)=>`<div class="rounded-lg p-3 border bg-white">
+    <div class="text-xs font-semibold ${cl.replace('text-','text-').replace('600','500')} uppercase tracking-wide">${lbl}</div>
+    <div class="text-2xl font-black ${cl} mt-1">${v}</div>
+  </div>`;
+  return c(tv,'text-red-600','Total Variance Units')+
+         c('$'+td.toFixed(0),'text-red-600','Est. $ Loss')+
+         c(fl,'text-orange-500','Flagged Shifts')+
+         c(total,'text-blue-700','Total Shifts');
+}
+
+function prodTable(products,varByProd){
+  const rows=products.map(p=>{
+    const tv=varByProd[p.id]||0;
+    const td=(tv*p.price).toFixed(2);
+    const level=tv>=6?'HIGH':tv>=2?'MEDIUM':'LOW';
+    const PROD_BADGE={HIGH:'badge-r',MEDIUM:'badge-y',LOW:'badge-g'};
+    const badge=`<span class="${PROD_BADGE[level]} text-xs px-2 py-0.5 rounded-full">${level}</span>`;
+    return `<tr><td class="py-1.5 pr-4 text-sm font-medium">${p.name}</td>
+      <td class="py-1.5 px-3 text-center text-sm font-bold ${tv>0?'text-red-600':'text-green-600'}">${tv}</td>
+      <td class="py-1.5 px-3 text-center text-sm text-red-600">$${td}</td>
+      <td class="py-1.5 text-center">${badge}</td></tr>`;
+  }).join('');
+  return `<table class="w-full text-sm mt-2">
+    <thead><tr class="text-xs text-gray-500 text-left">
+      <th class="pb-2 pr-4">Product / Game</th>
+      <th class="pb-2 px-3 text-center">Variance</th>
+      <th class="pb-2 px-3 text-center">Est. $ Loss</th>
+      <th class="pb-2 text-center">Alert</th>
+    </tr></thead>
+    <tbody>${rows}</tbody></table>`;
+}
+
+// ═══════════════════════════════════════════════════
+// STORES TAB
+// ═══════════════════════════════════════════════════
+function onStoreChange(){
+  // re-render review if it's visible
+  if(!document.getElementById('tab-review').classList.contains('hidden'))
+    renderReview(revSub);
+}
+
+function renderStores(){
+  const regionF=document.getElementById('storeRegionFilter').value;
+  const statusF=document.getElementById('storeStatusFilter').value;
+  const grid=document.getElementById('storeGrid');
+
+  // Build stats in one pass over shiftLog (avoids O(stores × entries) filter calls)
+  const statsMap={};
+  STORES.forEach(s=>{ statsMap[s.id]={entries:[],kVar:0,lVar:0,kDollar:0,lDollar:0,flaggedShifts:0,lastTs:0,lastDate:null}; });
+  shiftLog.forEach(e=>{
+    const st=statsMap[e.store]; if(!st)return;
+    st.entries.push(e);
+    if(e.ts>st.lastTs){st.lastTs=e.ts;st.lastDate=e.date;}
+    let f=false;
+    KRATOM.forEach(p=>{
+      const d=e.kratom?.[p.id]; if(!d)return;
+      const v=(d.begin-d.sales)-d.end;
+      if(v>0){st.kVar+=v;st.kDollar+=v*p.price;f=true;}
+    });
+    SCRATCHERS.forEach(p=>{
+      const d=e.lottery?.[p.id]; if(!d)return;
+      const v=(d.open-d.close)-d.sales;
+      if(v>0){st.lVar+=v;st.lDollar+=v*p.price;f=true;}
+    });
+    if(f)st.flaggedShifts++;
+  });
+  const storeStats=STORES.map(store=>{
+    const st=statsMap[store.id];
+    const totalDollar=st.kDollar+st.lDollar;
+    const totalVar=st.kVar+st.lVar;
+    const level=totalVar>=10?'ALERT':totalVar>=3?'WATCH':'CLEAN';
+    return {...store,...st,totalDollar,totalVar,level};
+  });
+
+  const filtered=storeStats
+    .filter(s=>!regionF||s.region===regionF)
+    .filter(s=>!statusF||s.level===statusF);
+
+  const LEVEL_BORDER={ALERT:'border-red-400',WATCH:'border-yellow-400',CLEAN:'border-green-300'};
+  const LEVEL_BADGE ={ALERT:'badge-r',        WATCH:'badge-y',         CLEAN:'badge-g'};
+  const LEVEL_DOT   ={ALERT:'bg-red-500',     WATCH:'bg-yellow-500',   CLEAN:'bg-green-500'};
+
+  grid.innerHTML=filtered.map(s=>{
+    const border=LEVEL_BORDER[s.level];
+    const badgeCls=LEVEL_BADGE[s.level];
+    const dot=LEVEL_DOT[s.level];
+    return `<div class="border-2 ${border} rounded-xl p-4 bg-white hover:shadow-md transition">
+      <div class="flex items-start justify-between mb-1">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full ${dot} inline-block"></span>
+            <span class="font-bold text-gray-800">${s.name}</span>
+          </div>
+          <div class="text-xs text-gray-400 ml-4">${s.city}${s.addr?` · ${s.addr}`:''}</div>
+        </div>
+        <span class="${badgeCls} text-xs px-2 py-0.5 rounded-full font-bold">${s.level}</span>
+      </div>
+      <div class="text-xs text-gray-400 mt-0.5 ml-4">${s.phone}</div>
+      ${s.hours?`<div class="text-xs text-gray-400 ml-4 leading-tight">${s.hours}</div>`:''}
+      <div class="text-xs text-gray-400 mt-2 mb-2">Last count: ${s.lastDate||'No data'} &nbsp;·&nbsp; ${s.entries.length} shifts logged</div>
+      <div class="grid grid-cols-4 gap-1 text-center">
+        <div class="bg-gray-50 rounded p-1.5">
+          <div class="text-xs text-gray-400">Flags</div>
+          <div class="font-bold ${s.flaggedShifts>0?'text-orange-500':'text-green-600'} text-sm">${s.flaggedShifts}</div>
+        </div>
+        <div class="bg-gray-50 rounded p-1.5">
+          <div class="text-xs text-gray-400">K Loss</div>
+          <div class="font-bold ${s.kDollar>0?'text-red-600':'text-green-600'} text-sm">$${s.kDollar.toFixed(0)}</div>
+        </div>
+        <div class="bg-gray-50 rounded p-1.5">
+          <div class="text-xs text-gray-400">Lotto Loss</div>
+          <div class="font-bold ${s.lDollar>0?'text-red-600':'text-green-600'} text-sm">$${s.lDollar.toFixed(0)}</div>
+        </div>
+        <div class="bg-gray-50 rounded p-1.5">
+          <div class="text-xs text-gray-400">Total</div>
+          <div class="font-bold ${s.totalDollar>0?'text-red-700':'text-green-600'} text-sm">$${s.totalDollar.toFixed(0)}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  if(!filtered.length) grid.innerHTML=`<p class="text-gray-400 italic text-sm col-span-3">No stores match filters.</p>`;
+}
+
+// ═══════════════════════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════════════════════
+function tick(){
+  const el=document.getElementById('hdrClock');
+  if(!el) return;
+  const n=new Date();
+  el.textContent=
+    n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+
+    ' · '+n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ═══════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════
+const ADMIN_CRED={id:'__admin__',username:'admin',password:'Keith2024!',name:'Administrator',role:'admin'};
+let users=[], districts=[], session=null;
+
+async function saveAuth(){
+  const [ue,de] = await Promise.all([
+    sb.from('app_users').upsert(users.map(toUserRow), {onConflict:'id'}),
+    sb.from('districts').upsert(districts.map(toDistrictRow), {onConflict:'id'})
+  ]);
+  if(ue.error) console.error('saveAuth users', ue.error);
+  if(de.error) console.error('saveAuth districts', de.error);
+}
+async function loadAuth(){
+  const [{data:ud,error:ue},{data:dd,error:de}] = await Promise.all([
+    sb.from('app_users').select('*'),
+    sb.from('districts').select('*')
+  ]);
+  if(ue) console.error('loadAuth users', ue);
+  if(de) console.error('loadAuth districts', de);
+  users     = (ud||[]).map(fromUserRow);
+  districts = (dd||[]).map(fromDistrictRow);
+
+  // If no users exist, create a default admin
+  if (users.length === 0) {
+    const defaultAdmin = {
+      id: 'admin_default',
+      name: 'Administrator',
+      username: 'admin',
+      password: 'Keith2024!',   // same as hardcoded ADMIN_CRED
+      role: 'admin',
+      districtId: null,
+      storeId: null
+    };
+    const { error } = await sb.from('app_users').insert([toUserRow(defaultAdmin)]);
+    if (!error) users.push(defaultAdmin);
+  }
+}
+function saveSession(){ if(session)sessionStorage.setItem('ss_sess',JSON.stringify(session));else sessionStorage.removeItem('ss_sess'); }
+function loadSession(){ const d=sessionStorage.getItem('ss_sess');if(d)session=JSON.parse(d); }
+
+function doLogin(e){
+  e.preventDefault();
+  const u=document.getElementById('loginUser').value.trim();
+  const p=document.getElementById('loginPass').value;
+  const errEl=document.getElementById('loginError');
+  errEl.classList.add('hidden');
+  if(u===ADMIN_CRED.username&&p===ADMIN_CRED.password){
+    session={userId:'__admin__',username:'admin',name:'Administrator',role:'admin',districtId:null,storeId:null};
+    saveSession(); onLoginSuccess(); return;
+  }
+  const user=users.find(x=>x.username===u&&x.password===p);
+  if(user){
+    session={userId:user.id,username:user.username,name:user.name,role:user.role,districtId:user.districtId||null,storeId:user.storeId||null};
+    saveSession(); onLoginSuccess(); return;
+  }
+  errEl.textContent='Invalid username or password.';
+  errEl.classList.remove('hidden');
+}
+
+function doLogout(){
+  session=null; saveSession();
+  document.getElementById('appScreen').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('loginUser').value='';
+  document.getElementById('loginPass').value='';
+}
+
+function onLoginSuccess(){
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('appScreen').classList.remove('hidden');
+  applyRoleUI();
+  buildCountTables();
+  document.getElementById('shiftDate').value=new Date().toISOString().split('T')[0];
+  // Auto-set store for store_leader/employee
+  if(session.storeId){
+    const sel=document.getElementById('storeSelect');
+    sel.value=session.storeId;
+    sel.disabled=(session.role==='employee');
+  }
+  showTab('count');
+  tick();
+}
+
+// ── Role helpers ──
+function visibleStoreIds(){
+  if(!session) return [];
+  if(session.role==='admin') return STORES.map(s=>s.id);
+  if(session.role==='dm'){
+    const d=districts.find(x=>x.id===session.districtId);
+    return d?d.storeIds:[];
+  }
+  return session.storeId?[session.storeId]:[];
+}
+function canAccess(tab){
+  if(!session) return false;
+  const r=session.role;
+  if(tab==='count') return true;
+  if(tab==='review') return ['store_leader','dm','admin'].includes(r);
+  if(tab==='log') return ['store_leader','dm','admin'].includes(r);
+  if(tab==='analytics') return ['dm','admin'].includes(r);
+  if(tab==='stores') return ['dm','admin'].includes(r);
+  if(tab==='admin') return r==='admin';
+  return false;
+}
+
+function applyRoleUI(){
+  if(!session)return;
+  // Tab visibility
+  const tabNames=['count','review','log','analytics','stores'];
+  document.querySelectorAll('.tab-btn').forEach((btn,i)=>{
+    if(i<tabNames.length) btn.classList.toggle('hidden',!canAccess(tabNames[i]));
+  });
+  document.getElementById('adminTabBtn').classList.toggle('hidden',!canAccess('admin'));
+
+  // User chip
+  const chip=document.getElementById('userChip');
+  chip.classList.remove('hidden');
+  const colors={admin:'bg-red-500',dm:'bg-yellow-500',store_leader:'bg-green-600',employee:'bg-blue-500'};
+  const labels={admin:'Admin',dm:'DM',store_leader:'Store Leader',employee:'Employee'};
+  chip.innerHTML=`<span class="text-white text-xs font-semibold">${session.name}</span>
+    <span class="${colors[session.role]||'bg-gray-500'} text-white text-xs px-1.5 py-0.5 rounded-full">${labels[session.role]||session.role}</span>
+    <button onclick="doLogout()" class="text-white opacity-60 hover:opacity-100 text-xs ml-1 font-bold">✕</button>`;
+
+  // Populate store selector (filtered by role)
+  const visible=visibleStoreIds();
+  const visStores=STORES.filter(s=>visible.includes(s.id));
+  const sel=document.getElementById('storeSelect');
+  sel.innerHTML='';
+  const regions=[...new Set(visStores.map(s=>s.region))];
+  regions.forEach(r=>{
+    const og=document.createElement('optgroup'); og.label=`── ${r} ──`;
+    visStores.filter(s=>s.region===r).forEach(s=>{
+      const o=document.createElement('option');
+      o.value=s.id; o.textContent=`#${s.num} — ${s.addr||s.city}`;
+      og.appendChild(o);
+    });
+    sel.appendChild(og);
+  });
+
+  // Store selector visibility
+  if(session.role==='employee') sel.disabled=true; else sel.disabled=false;
+
+  // Populate log store filter
+  const logSel=document.getElementById('logStore');
+  logSel.innerHTML='<option value="">All Stores</option>';
+  visStores.forEach(s=>{
+    const o=document.createElement('option'); o.value=s.id;
+    o.textContent=`#${s.num} ${s.name} — ${s.city}`; logSel.appendChild(o);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// ADMIN PANEL
+// ═══════════════════════════════════════════════════
+function showAdSub(type){
+  ['users','districts','items'].forEach(t=>{
+    document.getElementById('ad-'+t).classList.toggle('hidden',type!==t);
+  });
+  document.getElementById('adTabU').classList.toggle('active',type==='users');
+  document.getElementById('adTabD').classList.toggle('active',type==='districts');
+  document.getElementById('adTabI').classList.toggle('active',type==='items');
+  document.getElementById('adTabU').classList.toggle('text-gray-500',type!=='users');
+  document.getElementById('adTabD').classList.toggle('text-gray-500',type!=='districts');
+  document.getElementById('adTabI').classList.toggle('text-gray-500',type!=='items');
+  if(type==='users') renderUsersTable();
+  if(type==='districts') renderDistrictsGrid();
+  if(type==='items') renderItemsTables();
+}
+
+// ═══════════════════════════════════════════════════
+// ITEMS MANAGEMENT
+// ═══════════════════════════════════════════════════
+async function loadItems() {
+  const { data, error } = await sb.from('items').select('*').order('sort_order');
+  if (error) { console.error('loadItems', error); return; }
+
+  if (data && data.length) {
+    // Populate from Supabase
+    KRATOM.length = 0;
+    SCRATCHERS.length = 0;
+    data.forEach(r => {
+      const item = { id: r.id, name: r.name, price: parseFloat(r.price) };
+      if (r.category === 'kratom') KRATOM.push(item);
+      else SCRATCHERS.push(item);
+    });
+  } else {
+    // No items yet → seed defaults and save them to Supabase
+    KRATOM_DEFAULTS.forEach(x => KRATOM.push({ ...x }));
+    SCRATCHERS_DEFAULTS.forEach(x => SCRATCHERS.push({ ...x }));
+    await saveItems();   // inserts all default items into Supabase
+  }
+}
+async function saveItems(){
+  // Bulk replace — delete all then insert (used for reset to defaults)
+  await sb.from('items').delete().neq('id','');
+  const rows = [
+    ...KRATOM.map((it,i)=>({id:it.id, category:'kratom', name:it.name, price:it.price, sort_order:i})),
+    ...SCRATCHERS.map((it,i)=>({id:it.id, category:'scratchers', name:it.name, price:it.price, sort_order:i}))
+  ];
+  if(rows.length){ const {error}=await sb.from('items').insert(rows); if(error) console.error('saveItems', error); }
+}
+
+function renderItemsTables(){
+  renderItemsSection('kratom', KRATOM, 'itemsKratomBody');
+  renderItemsSection('scratchers', SCRATCHERS, 'itemsScratchersBody');
+}
+
+function renderItemsSection(cat, list, bodyId){
+  const tb = document.getElementById(bodyId);
+  tb.innerHTML = '';
+  list.forEach(item=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="py-2 pr-4 text-gray-800">${item.name}</td>
+      <td class="py-2 pr-4 text-gray-600">$${item.price.toFixed(2)}</td>
+      <td class="py-2 flex gap-2">
+        <button onclick="showItemForm('${cat}','${item.id}')"
+          class="text-xs px-2 py-1 border rounded text-blue-700 hover:bg-blue-50">Edit</button>
+        <button onclick="deleteItem('${cat}','${item.id}')"
+          class="text-xs px-2 py-1 border rounded text-red-600 hover:bg-red-50">Delete</button>
+      </td>`;
+    tb.appendChild(tr);
+  });
+}
+
+let _editItemCat = null, _editItemId = null;
+function showItemForm(cat, id=null){
+  _editItemCat = cat;
+  _editItemId = id;
+  document.getElementById('ifCategory').value = cat;
+  document.getElementById('ifId').value = id || '';
+  document.getElementById('ifError').classList.add('hidden');
+  const list = cat === 'kratom' ? KRATOM : SCRATCHERS;
+  if(id){
+    const item = list.find(x=>x.id===id);
+    document.getElementById('itemFormTitle').textContent = 'Edit Item';
+    document.getElementById('ifName').value = item.name;
+    document.getElementById('ifPrice').value = item.price;
+  } else {
+    document.getElementById('itemFormTitle').textContent = cat==='kratom' ? 'Add Kratom Item' : 'Add Scratch-Off Game';
+    document.getElementById('ifName').value = '';
+    document.getElementById('ifPrice').value = '';
+  }
+  document.getElementById('itemForm').classList.remove('hidden');
+  document.getElementById('ifName').focus();
+}
+
+function hideItemForm(){
+  document.getElementById('itemForm').classList.add('hidden');
+  _editItemCat = null; _editItemId = null;
+}
+
+async function saveItem(){
+  const cat = document.getElementById('ifCategory').value;
+  const id  = document.getElementById('ifId').value;
+  const name  = document.getElementById('ifName').value.trim();
+  const price = parseFloat(document.getElementById('ifPrice').value);
+  const errEl = document.getElementById('ifError');
+  if(!name){ errEl.textContent='Name is required.'; errEl.classList.remove('hidden'); return; }
+  if(isNaN(price)||price<0){ errEl.textContent='Enter a valid price.'; errEl.classList.remove('hidden'); return; }
+
+  const list = cat === 'kratom' ? KRATOM : SCRATCHERS;
+  if(id){
+    const item = list.find(x=>x.id===id);
+    item.name = name; item.price = price;
+    const {error}=await sb.from('items').update({name, price, sort_order:list.indexOf(item)}).eq('id',id);
+    if(error){showFormError(errEl,'Error saving item',error);return;}
+  } else {
+    const prefix = cat === 'kratom' ? 'k' : 's';
+    const newId = prefix + Date.now();
+    const sortOrder = list.length;
+    const {error}=await sb.from('items').insert([{id:newId, category:cat, name, price, sort_order:sortOrder}]);
+    if(error){showFormError(errEl,'Error saving item',error);return;}
+    list.push({id:newId, name, price});
+  }
+  buildCountTables();
+  renderItemsTables();
+  hideItemForm();
+}
+
+async function deleteItem(cat, id){
+  if(!confirm('Delete this item? It will no longer appear on count sheets.')) return;
+  const {error}=await sb.from('items').delete().eq('id',id);
+  if(error){alert('Error deleting item.');console.error(error);return;}
+  if(cat==='kratom') KRATOM.splice(KRATOM.findIndex(x=>x.id===id),1);
+  else SCRATCHERS.splice(SCRATCHERS.findIndex(x=>x.id===id),1);
+  buildCountTables();
+  renderItemsTables();
+}
+
+async function resetItemsToDefaults(){
+  if(!confirm('Reset all items to factory defaults? Any additions or edits will be lost.')) return;
+  KRATOM.length = 0; KRATOM_DEFAULTS.forEach(x=>KRATOM.push({...x}));
+  SCRATCHERS.length = 0; SCRATCHERS_DEFAULTS.forEach(x=>SCRATCHERS.push({...x}));
+  await saveItems();
+  buildCountTables();
+  renderItemsTables();
+}
+
+// ── User form ──
+let editUserId=null;
+function showUserForm(id=null){
+  editUserId=id;
+  const f=document.getElementById('userForm');
+  document.getElementById('userFormTitle').textContent=id?'Edit User':'Add User';
+  document.getElementById('ufError').classList.add('hidden');
+  if(id){
+    const u=users.find(x=>x.id===id);
+    document.getElementById('ufId').value=u.id;
+    document.getElementById('ufName').value=u.name;
+    document.getElementById('ufUser').value=u.username;
+    document.getElementById('ufPass').value=u.password;
+    document.getElementById('ufRole').value=u.role;
+    document.getElementById('ufDistrict').value=u.districtId||'';
+    document.getElementById('ufStore').value=u.storeId||'';
+  } else {
+    ['ufId','ufName','ufUser','ufPass'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('ufRole').value='employee';
+  }
+  populateUfSelects();
+  ufRoleChange();
+  f.classList.remove('hidden');
+}
+function hideUserForm(){ document.getElementById('userForm').classList.add('hidden'); }
+
+function populateUfSelects(){
+  // Districts dropdown
+  const ds=document.getElementById('ufDistrict');
+  ds.innerHTML='<option value="">— Unassigned —</option>';
+  districts.forEach(d=>{ const o=document.createElement('option');o.value=d.id;o.textContent=d.name;ds.appendChild(o); });
+  // Store dropdown
+  const ss=document.getElementById('ufStore');
+  ss.innerHTML='<option value="">— Select Store —</option>';
+  STORES.forEach(s=>{ const o=document.createElement('option');o.value=s.id;o.textContent=`#${s.num} ${s.city}`;ss.appendChild(o); });
+}
+
+function ufRoleChange(){
+  const role=document.getElementById('ufRole').value;
+  document.getElementById('ufDistrictWrap').classList.toggle('hidden',role!=='dm');
+  document.getElementById('ufStoreWrap').classList.toggle('hidden',role==='dm');
+}
+
+async function saveUser(){
+  const name=document.getElementById('ufName').value.trim();
+  const uname=document.getElementById('ufUser').value.trim();
+  const pass=document.getElementById('ufPass').value;
+  const role=document.getElementById('ufRole').value;
+  const districtId=document.getElementById('ufDistrict').value||null;
+  const storeId=document.getElementById('ufStore').value||null;
+  const errEl=document.getElementById('ufError');
+  if(!name||!uname||(!pass&&!editUserId)){errEl.textContent='Name, username and password are required.';errEl.classList.remove('hidden');return;}
+  if(!editUserId&&users.find(x=>x.username===uname)){errEl.textContent='Username already exists.';errEl.classList.remove('hidden');return;}
+  if(editUserId){
+    const u=users.find(x=>x.id===editUserId);
+    u.name=name; u.username=uname; if(pass)u.password=pass;
+    u.role=role; u.districtId=role==='dm'?districtId:null; u.storeId=role!=='dm'?storeId:null;
+    const {error}=await sb.from('app_users').update(toUserRow(u)).eq('id',editUserId);
+    if(error){showFormError(errEl,'Error saving user',error);return;}
+  } else {
+    const newUser={id:'u'+Date.now(),name,username:uname,password:pass,role,
+      districtId:role==='dm'?districtId:null, storeId:role!=='dm'?storeId:null};
+    const {error}=await sb.from('app_users').insert([toUserRow(newUser)]);
+    if(error){showFormError(errEl,'Error saving user',error);return;}
+    users.push(newUser);
+  }
+  hideUserForm(); renderUsersTable();
+}
+
+async function deleteUser(id){
+  if(!confirm('Delete this user?'))return;
+  const {error}=await sb.from('app_users').delete().eq('id',id);
+  if(error){alert('Error deleting user: '+error.message);console.error(error);return;} // alert intentional (no errEl)
+  users=users.filter(x=>x.id!==id);
+  renderUsersTable();
+}
+
+function renderUsersTable(){
+  const tbody=document.getElementById('usersBody');
+  if(!users.length){ tbody.innerHTML=`<tr><td colspan="5" class="py-4 text-gray-400 italic text-sm">No users yet. Add users above.</td></tr>`; return; }
+  const roleBadge={dm:'badge-y',store_leader:'badge-g',employee:'badge-b'};
+  const roleLabel={dm:'District Manager',store_leader:'Store Leader',employee:'Employee'};
+  tbody.innerHTML=users.map(u=>{
+    const store=STORES.find(s=>s.id===u.storeId);
+    const dist=districts.find(d=>d.id===u.districtId);
+    const loc=u.role==='dm'?(dist?dist.name:'Unassigned'):(store?`#${store.num} ${store.city}`:'Unassigned');
+    return `<tr>
+      <td class="py-2 pr-4 font-medium text-sm">${u.name}</td>
+      <td class="py-2 pr-4 text-sm font-mono text-gray-600">${u.username}</td>
+      <td class="py-2 pr-4"><span class="${roleBadge[u.role]||'badge-b'} text-xs px-2 py-0.5 rounded-full">${roleLabel[u.role]||u.role}</span></td>
+      <td class="py-2 pr-4 text-sm text-gray-600">${loc}</td>
+      <td class="py-2 flex gap-2">
+        <button onclick="showUserForm('${u.id}')" class="text-xs text-blue-600 hover:underline">Edit</button>
+        <button onclick="deleteUser('${u.id}')" class="text-xs text-red-500 hover:underline">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── District form ──
+let editDistrictId=null;
+function showDistrictForm(id=null){
+  editDistrictId=id;
+  document.getElementById('districtFormTitle').textContent=id?'Edit District':'Add District';
+  document.getElementById('dfError').classList.add('hidden');
+  // Populate DM dropdown
+  const dmSel=document.getElementById('dfDm');
+  dmSel.innerHTML='<option value="">— Unassigned —</option>';
+  users.filter(u=>u.role==='dm').forEach(u=>{
+    const o=document.createElement('option'); o.value=u.id; o.textContent=u.name; dmSel.appendChild(o);
+  });
+  // Populate store checklist
+  const storesDiv=document.getElementById('dfStores');
+  storesDiv.innerHTML=STORES.map(s=>`
+    <label class="flex items-center gap-1.5 text-xs cursor-pointer py-0.5">
+      <input type="checkbox" class="dfStoreChk" value="${s.id}">
+      <span>#${s.num} ${s.city}</span>
+    </label>`).join('');
+  if(id){
+    const d=districts.find(x=>x.id===id);
+    document.getElementById('dfId').value=d.id;
+    document.getElementById('dfName').value=d.name;
+    dmSel.value=d.dmId||'';
+    document.querySelectorAll('.dfStoreChk').forEach(cb=>{ cb.checked=d.storeIds.includes(cb.value); });
+  } else {
+    document.getElementById('dfId').value='';
+    document.getElementById('dfName').value='';
+  }
+  document.getElementById('districtForm').classList.remove('hidden');
+}
+function hideDistrictForm(){ document.getElementById('districtForm').classList.add('hidden'); }
+
+async function saveDistrict(){
+  const name=document.getElementById('dfName').value.trim();
+  const dmId=document.getElementById('dfDm').value||null;
+  const storeIds=[...document.querySelectorAll('.dfStoreChk:checked')].map(x=>x.value);
+  const errEl=document.getElementById('dfError');
+  if(!name){errEl.textContent='District name is required.';errEl.classList.remove('hidden');return;}
+  if(editDistrictId){
+    const d=districts.find(x=>x.id===editDistrictId);
+    d.name=name; d.dmId=dmId; d.storeIds=storeIds;
+    if(dmId){const u=users.find(x=>x.id===dmId);if(u){u.districtId=editDistrictId;await sb.from('app_users').update({district_id:editDistrictId}).eq('id',dmId);}}
+    const {error}=await sb.from('districts').update(toDistrictRow(d)).eq('id',editDistrictId);
+    if(error){showFormError(errEl,'Error saving district',error);return;}
+  } else {
+    const did='d'+Date.now();
+    const newDist={id:did,name,dmId,storeIds};
+    districts.push(newDist);
+    if(dmId){const u=users.find(x=>x.id===dmId);if(u){u.districtId=did;await sb.from('app_users').update({district_id:did}).eq('id',dmId);}}
+    const {error}=await sb.from('districts').insert([toDistrictRow(newDist)]);
+    if(error){showFormError(errEl,'Error saving district',error);return;}
+  }
+  hideDistrictForm(); renderDistrictsGrid();
+}
+
+async function deleteDistrict(id){
+  if(!confirm('Delete this district?'))return;
+  const {error}=await sb.from('districts').delete().eq('id',id);
+  if(error){alert('Error deleting district.');console.error(error);return;}
+  districts=districts.filter(x=>x.id!==id);
+  const affected=users.filter(u=>u.districtId===id);
+  affected.forEach(u=>u.districtId=null);
+  if(affected.length) await sb.from('app_users').update({district_id:null}).in('id',affected.map(u=>u.id));
+  renderDistrictsGrid();
+}
+
+function renderDistrictsGrid(){
+  const el=document.getElementById('districtsGrid');
+  if(!districts.length){
+    el.innerHTML=`<div class="col-span-2 text-gray-400 italic text-sm py-4">No districts yet. Create one above.</div>`;
+    return;
+  }
+  el.innerHTML=districts.map(d=>{
+    const dm=users.find(u=>u.id===d.dmId);
+    const storeNames=d.storeIds.slice(0,4).map(id=>{ const s=STORES.find(x=>x.id===id); return s?`#${s.num} ${s.city}`:''; }).filter(Boolean);
+    const more=d.storeIds.length-4;
+    return `<div class="border rounded-xl p-4 bg-white hover:shadow-md transition">
+      <div class="flex items-start justify-between mb-1">
+        <div class="font-bold text-gray-800">${d.name}</div>
+        <div class="flex gap-2">
+          <button onclick="showDistrictForm('${d.id}')" class="text-xs text-blue-600 hover:underline">Edit</button>
+          <button onclick="deleteDistrict('${d.id}')" class="text-xs text-red-500 hover:underline">Delete</button>
+        </div>
+      </div>
+      <div class="text-xs text-gray-500 mb-2">DM: <span class="font-medium">${dm?dm.name:'Unassigned'}</span></div>
+      <div class="text-xs text-gray-500 mb-1">${d.storeIds.length} stores assigned</div>
+      <div class="text-xs text-gray-400">${storeNames.join(' · ')}${more>0?` · +${more} more`:''}</div>
+    </div>`;
+  }).join('');
+}
+
+// Override showTab to add admin case + access check
+function showTab(name){
+  if(!canAccess(name)) return;
+  const allTabs=['count','review','log','analytics','stores','admin'];
+  allTabs.forEach(t=>{
+    const el=document.getElementById(`tab-${t}`);
+    if(el) el.classList.toggle('hidden',t!==name);
+  });
+  // Regular tab buttons
+  ['count','review','log','analytics','stores'].forEach((t,i)=>{
+    const btns=document.querySelectorAll('.tab-btn');
+    if(btns[i]) btns[i].classList.toggle('active',t===name);
+  });
+  document.getElementById('adminTabBtn').classList.toggle('active',name==='admin');
+  if(name==='review')    renderReview(revSub);
+  if(name==='log'||name==='analytics'||name==='stores'){
+    loadState().then(()=>{
+      if(name==='log')       renderLog();
+      if(name==='analytics') renderAnalytics('kratom');
+      if(name==='stores')    renderStores();
+    });
+  }
+  if(name==='admin')     { showAdSub('users'); }
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+async function init(){
+  loadSession();
+
+  const loginBtn = document.querySelector('#loginScreen button[type=submit]');
+  const loginErr = document.getElementById('loginError');
+  if(loginBtn){ loginBtn.disabled=true; loginBtn.textContent='Connecting…'; }
+
+  try {
+    await Promise.all([loadAuth(), loadState(), loadItems()]);
+  } catch(e){
+    console.error('Init failed:', e);
+    if(loginErr){ loginErr.textContent='Could not connect to database. Check your connection.'; loginErr.classList.remove('hidden'); }
+    if(loginBtn){ loginBtn.disabled=false; loginBtn.textContent='Sign In'; }
+    document.getElementById('loginScreen').classList.remove('hidden');
+    return;
   }
 
-  document.getElementById("loginScreen").style.display = "none"
-  document.getElementById("app").style.display = "block"
+  if(loginBtn){ loginBtn.disabled=false; loginBtn.textContent='Sign In'; }
+
+  if(!shiftLog.length){ seedDemo(); await saveState(); }
+
+  if(session){
+    onLoginSuccess();
+  } else {
+    document.getElementById('loginScreen').classList.remove('hidden');
+  }
 }
 
-loadStores()
-loadAnalytics()
-
-}
-
-
-
-/* NAVIGATION */
-
-function showPage(page){
-
-document.querySelectorAll("[id$='Page']")
-.forEach(p=>p.classList.add("hidden"))
-
-document.getElementById(page+"Page").classList.remove("hidden")
-
-}
-
-
-
-/* LOAD STORES */
-
-async function loadStores(){
-
-const {data} = await sb.from("stores").select("*")
-
-const select = document.getElementById("storeSelect")
-
-select.innerHTML=""
-
-data.forEach(store=>{
-
-const option=document.createElement("option")
-
-option.value=store.id
-option.text=store.name
-
-select.appendChild(option)
-
-})
-
-}
-
-
-
-/* SCANNER */
-
-const codeReader=new ZXing.BrowserBarcodeReader()
-
-async function startScanner(){
-
-const video=document.getElementById("scanner")
-
-const result=await codeReader.decodeOnceFromVideoDevice(undefined,video)
-
-document.getElementById("barcodeResult").value=result.text
-
-}
-
-
-
-/* SAVE SCAN */
-
-async function saveScan(){
-
-const store=document.getElementById("storeSelect").value
-const barcode=document.getElementById("barcodeResult").value
-const qty=document.getElementById("scanQty").value
-
-await sb.from("shift_logs").insert({
-
-id:crypto.randomUUID(),
-store:store,
-barcode:barcode,
-qty:qty,
-date:new Date().toISOString()
-
-})
-
-alert("Saved")
-
-loadAnalytics()
-
-}
-
-
-
-/* MANUAL SAVE */
-
-async function saveManual(){
-
-const barcode=document.getElementById("manualBarcode").value
-const name=document.getElementById("manualName").value
-const price=document.getElementById("manualPrice").value
-const qty=document.getElementById("manualQty").value
-
-await sb.from("items").insert({
-
-barcode:barcode,
-name:name,
-price:price,
-qty:qty
-
-})
-
-alert("Item Added")
-
-}
-
-
-
-/* LOAD INVENTORY */
-
-async function loadInventory(){
-
-const {data}=await sb.from("items").select("*")
-
-let table=document.getElementById("inventoryTable")
-
-table.innerHTML=""
-
-data.forEach(i=>{
-
-table.innerHTML+=`
-<tr>
-<td>${i.barcode}</td>
-<td>${i.name}</td>
-<td>${i.qty || 0}</td>
-</tr>
-`
-
-})
-
-}
-
-
-
-/* ANALYTICS */
-
-async function loadAnalytics(){
-
-const {data}=await sb.from("shift_logs").select("*")
-
-document.getElementById("analyticsBox").innerText=
-"Total Scans Logged: "+data.length
-
-}
-
+tick();
+setInterval(tick,30000);
+init();
 </script>
-
 </body>
 </html>
