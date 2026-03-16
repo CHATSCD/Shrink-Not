@@ -335,17 +335,18 @@ async function loadActiveShifts() {
   if (!sel) return;
   const storeVal = sel.value || 's107';
 
-  const { data, error } = await sb
-    .from('shift_logs')
-    .select('id, date, shift, in_clerk, store')
-    .eq('store', storeVal)
-    .eq('status', 'started')
-    .order('date', { ascending: false });
+try {
+  const { error } = await sb.from('shift_logs').insert([entry]);
+  if (error) {
+    alert('Supabase error: ' + JSON.stringify(error));
+    return;
+  }
+} catch (e) {
+  alert('JS error in startShift: ' + e.name + ': ' + e.message);
+  console.error(e);
+  return;
+}
 
-  const endSel = document.getElementById('endShiftSelect');
-  endSel.innerHTML = '<option value="">— Select started shift —</option>';
-
-  if (error || !data) return;
 
   data.forEach(row => {
     const opt = document.createElement('option');
