@@ -173,6 +173,34 @@
       <div id="sub-end" class="hidden">
         <div class="flex flex-wrap gap-3 mb-4">
           <select id="endShiftSelect" class="inp w-64" onchange="loadActiveShift()"><option value="">— Select started shift —</option></select>
+          async function loadActiveShift() {
+  const store = document.getElementById('storeSelect').value || 's107';
+
+  const { data, error } = await sb
+    .from('shift_logs')
+    .select('id, date, shift, in_clerk')
+    .eq('store', store)
+    .eq('status', 'started')
+    .order('date', { ascending: false });
+
+  const sel = document.getElementById('endShiftSelect');
+  sel.innerHTML = '<option value="">— Select started shift —</option>';
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  if (!data || data.length === 0) return;
+
+  data.forEach(row => {
+    const opt = document.createElement('option');
+    opt.value = row.id;
+    opt.textContent = `${row.date} — ${row.shift} — ${row.in_clerk}`;
+    sel.appendChild(opt);
+  });
+}
+
           <input id="endClerk" type="text" class="inp w-40" placeholder="Outgoing clerk">
           <button onclick="completeShift()" class="ml-auto bg-[#003087] text-white px-6 py-2 rounded font-bold">Complete Shift</button>
         </div>
