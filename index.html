@@ -37,12 +37,15 @@
       <div style="color:#C8102E;font-weight:900;font-size:14px;letter-spacing:1px;">SUPERSTORES</div>
       <div class="text-xl font-black tracking-widest text-gray-800 mt-2">SHRINK SHIELD</div>
     </div>
-    <form id="loginForm" class="space-y-3">
-      <div><label class="lbl">USERNAME</label><input id="loginUser" type="text" class="inp w-full" autofocus></div>
-      <div><label class="lbl">PASSWORD</label><input id="loginPass" type="password" class="inp w-full"></div>
-      <div id="loginError" class="hidden text-red-600 text-sm text-center bg-red-50 rounded p-2"></div>
-      <button type="submit" id="loginBtn" style="background:#003087;" class="w-full py-3 rounded-lg text-white font-bold">Sign In</button>
-    </form>
+   <form id="loginForm" class="space-y-3">
+  <div><label class="lbl">USERNAME</label><input id="loginUser" type="text" class="inp w-full" autofocus></div>
+  <div><label class="lbl">PASSWORD</label><input id="loginPass" type="password" class="inp w-full"></div>
+  <div id="loginError" class="hidden text-red-600 text-sm text-center bg-red-50 rounded p-2"></div>
+  <button type="submit" id="loginBtn" style="background:#003087;" class="w-full py-3 rounded-lg text-white font-bold">
+    Sign In
+  </button>
+</form>
+
   </div>
 </div>
 
@@ -145,66 +148,42 @@
       </div>
 
       <!-- START SHIFT -->
-    async function startShift() {
-  if (!session || !session.user) {
-    alert('You must be logged in to start a shift.');
-    return;
-  }
+      <div id="sub-start">
+        <div class="flex flex-wrap gap-3 mb-4">
+          <div>
+            <label class="lbl">SHIFT</label>
+            <select id="startShiftSel" class="inp w-32">
+              <option>Morning</option>
+              <option>Afternoon</option>
+              <option>Evening</option>
+              <option>Night</option>
+            </select>
+          </div>
+          <div>
+            <label class="lbl">DATE</label>
+            <input id="startDate" type="date" class="inp w-36">
+          </div>
+          <div>
+            <label class="lbl">INCOMING CLERK</label>
+            <input id="startClerk" type="text" class="inp w-40" placeholder="Your name">
+          </div>
+          <button onclick="startShift()" class="ml-auto bg-[#003087] text-white px-6 py-2 rounded font-bold">Start Shift</button>
+        </div>
 
-  const now = Date.now();
-  const storeSel = document.getElementById('storeSelect');
-  const dateInp = document.getElementById('startDate');
-  const shiftSel = document.getElementById('startShiftSel');
-  const clerkInp = document.getElementById('startClerk');
-
-  // build the entry object FIRST
-  const entry = {
-    id: 'shift_' + now,
-    store: storeSel.value || 's107',
-    store_name: '',
-    store_city: '',
-    date: dateInp.value || new Date().toISOString().split('T')[0],
-    shift: shiftSel.value,
-    in_clerk: clerkInp.value || session.user.name || '',
-    out_clerk: null,
-    kratom: {},
-    lottery: null,
-    status: 'started',
-    ts_start: now,
-    ts_end: null
-  };
-
-  KRATOM.forEach(p => {
-    entry.kratom[p.id] = {
-      begin: {
-        office: {
-          bottles: parseInt(document.getElementById(`ob-${p.id}`).value) || 0,
-          cases:  parseInt(document.getElementById(`oc-${p.id}`).value) || 0
-        },
-        floor: {
-          bottles: parseInt(document.getElementById(`fb-${p.id}`).value) || 0,
-          cases:  parseInt(document.getElementById(`fc-${p.id}`).value) || 0
-        }
-      }
-    };
-  });
-
-  try {
-    const { error } = await sb.from('shift_logs').insert([entry]);
-    if (error) {
-      alert('Supabase error: ' + JSON.stringify(error));
-      return;
-    }
-  } catch (e) {
-    alert('JS error in startShift: ' + e.name + ': ' + e.message);
-    console.error(e);
-    return;
-  }
-
-  alert('Shift started!');
-  showCountSub('end');
-  await loadActiveShifts();
-}
+        <table class="w-full text-sm">
+          <thead>
+            <tr>
+              <th class="pb-2">PRODUCT</th>
+              <th class="text-center pb-2" colspan="2">OFFICE</th>
+              <th class="text-center pb-2" colspan="2">SALES FLOOR</th>
+            </tr>
+            <tr class="text-xs text-gray-400">
+              <th></th><th>Bottles</th><th>Cases</th><th>Bottles</th><th>Cases</th>
+            </tr>
+          </thead>
+          <tbody id="startKratomBody"></tbody>
+        </table>
+      </div>
 
       <!-- END SHIFT -->
       <div id="sub-end" class="hidden">
@@ -270,43 +249,68 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ================ SIMPLE LOGIN ================
 const USERS = {
-  'admin':       {password:'1234',       name:'Admin User',        role:'admin'},
-  'C.Riley':     {password:'Store107!',  name:'Chelsea Riley',     role:'employee'},
-  'A.Herrin':    {password:'Store107!',  name:'Amber Herrin',      role:'store_leader'},
-  'S.Dubuisson': {password:'Store107!',  name:'Shaun Dubuisson',   role:'store_leader'},
-  'C.Davenport': {password:'Store107!',  name:'Caitlyne Davenport',role:'employee'}
+  'admin':      
+  {password:'1234',      name:'Admin User',        role:'admin'},
+  'C.Riley':     {password:'Store107!', name:'Chelsea Riley',     role:'employee'},
+  'A.Herrin':    {password:'Store107!', 
+name:'Amber Herrin',      role:'store_leader'},
+  'S.Dubuisson': {password:'Store107!', 
+name:'Shaun Dubuisson',   role:'admin'},
+  'C.Davenport': {password:'Store107!', name:'Caitlyne Davenport',role:'employee'}
 };
 
 let session = null;
 
 function doLogin(e) {
-  e.preventDefault();
+  e.preventDefault(); // <<< stops the page from reloading
+
   const u = document.getElementById('loginUser').value.trim();
   const p = document.getElementById('loginPass').value;
   const user = USERS[u];
 
   if (!user || user.password !== p) {
-    document.getElementById('loginError').textContent = 'Wrong username or password';
-    document.getElementById('loginError').classList.remove('hidden');
+    const errBox = document.getElementById('loginError');
+    errBox.textContent = 'Wrong username or password';
+    errBox.classList.remove('hidden');
     return;
   }
 
-  session = { user: {username: u, name: user.name, role: user.role} };
+  session = { user: { username: u, name: user.name, role: user.role } };
   sessionStorage.setItem('ss', JSON.stringify(session));
+
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('appScreen').classList.remove('hidden');
   document.getElementById('userChip').innerHTML =
     `${user.name} <button onclick="doLogout()" class="underline text-xs">Logout</button>`;
   document.getElementById('userChip').classList.remove('hidden');
   if (user.role === 'admin') document.getElementById('adminTabBtn').classList.remove('hidden');
-
-  loadActiveShifts();
 }
 
 function doLogout() {
   sessionStorage.clear();
   location.reload();
 }
+
+function init() {
+  // attach login handler
+  const form = document.getElementById('loginForm');
+  form.addEventListener('submit', doLogin);
+
+  // restore session if already logged in
+  const saved = sessionStorage.getItem('ss');
+  if (saved) {
+    session = JSON.parse(saved);
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('appScreen').classList.remove('hidden');
+    document.getElementById('userChip').innerHTML =
+      `${session.user.name} <button onclick="doLogout()" class="underline text-xs">Logout</button>`;
+    document.getElementById('userChip').classList.remove('hidden');
+    if (session.user.role === 'admin') document.getElementById('adminTabBtn').classList.remove('hidden');
+  }
+}
+
+// ensure DOM is ready before we query elements
+window.addEventListener('DOMContentLoaded', init);
 
 // ================ COUNT DATA ================
 const KRATOM = [
@@ -353,24 +357,116 @@ function renderEndKratomTable() {
   });
 }
 
-// ================ SHIFT LOAD / SAVE ================
-async function loadActiveShifts() {
-  const sel = document.getElementById('storeSelect');
-  if (!sel) return;
-  const storeVal = sel.value || 's107';
+<script>
+/* ================= SUPABASE ================= */
+const SUPABASE_URL = 'https://ylfsqjbqhewpfiooytlg.supabase.co';
+const SUPABASE_KEY = 'YOUR_ANON_KEY_HERE'; // <- replace with your real anon key
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-try {
-  const { error } = await sb.from('shift_logs').insert([entry]);
-  if (error) {
-    alert('Supabase error: ' + JSON.stringify(error));
+/* ================= SIMPLE LOGIN ================= */
+const USERS = {
+  'admin':       {password:'1234',      name:'Admin User',        role:'admin'},
+  'C.Riley':     {password:'Store107!', name:'Chelsea Riley',     role:'employee'},
+  'A.Herrin':    {password:'Store107!', name:'Amber Herrin',      role:'store_leader'},
+  'S.Dubuisson': {password:'Store107!', name:'Shaun Dubuisson',   role:'store_leader'},
+  'C.Davenport': {password:'Store107!', name:'Caitlyne Davenport',role:'employee'}
+};
+
+let session = null;
+
+function doLogin(e) {
+  e.preventDefault();
+
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const user = USERS[u];
+
+  if (!user || user.password !== p) {
+    const errBox = document.getElementById('loginError');
+    errBox.textContent = 'Wrong username or password';
+    errBox.classList.remove('hidden');
     return;
   }
-} catch (e) {
-  alert('JS error in startShift: ' + e.name + ': ' + e.message);
-  console.error(e);
-  return;
+
+  session = { user: { username: u, name: user.name, role: user.role } };
+  sessionStorage.setItem('ss', JSON.stringify(session));
+
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('appScreen').classList.remove('hidden');
+  document.getElementById('userChip').innerHTML =
+    `${user.name} <button onclick="doLogout()" class="underline text-xs">Logout</button>`;
+  document.getElementById('userChip').classList.remove('hidden');
+  if (user.role === 'admin') document.getElementById('adminTabBtn').classList.remove('hidden');
+
+  loadActiveShifts();
 }
 
+function doLogout() {
+  sessionStorage.clear();
+  location.reload();
+}
+
+/* ================= COUNT DATA ================= */
+const KRATOM = [
+  {id:'k1',name:'Viva Zen Ultimate'},
+  {id:'k2',name:'Viva Zen Red Top'},
+  {id:'k3',name:'Viva Zen White Top'},
+  {id:'k4',name:'Kryptic Kratom Relaxation'},
+  {id:'k5',name:'Kryptic Kratom Thin'}
+];
+
+function buildStartKratomTable() {
+  const tbody = document.getElementById('startKratomBody');
+  tbody.innerHTML = '';
+  KRATOM.forEach(p => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="py-2 font-medium">${p.name}</td>
+      <td><input type="number" id="ob-${p.id}" class="num-inp" value="0"></td>
+      <td><input type="number" id="oc-${p.id}" class="num-inp" value="0"></td>
+      <td><input type="number" id="fb-${p.id}" class="num-inp" value="0"></td>
+      <td><input type="number" id="fc-${p.id}" class="num-inp" value="0"></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderEndKratomTable() {
+  const tbody = document.getElementById('endKratomBody');
+  tbody.innerHTML = '';
+  KRATOM.forEach(p => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="py-2 font-medium">${p.name}</td>
+      <td><input type="number" id="end-ob-${p.id}" class="num-inp" value="0"></td>
+      <td><input type="number" id="end-oc-${p.id}" class="num-inp" value="0"></td>
+      <td><input type="number" id="end-fb-${p.id}" class="num-inp" value="0"></td>
+      <td><input type="number" id="end-fc-${p.id}" class="num-inp" value="0"></td>
+      <td><input type="number" id="end-sales-${p.id}" class="num-inp" value="0"></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ================= SHIFT LOAD / SAVE ================= */
+
+// load active (started) shifts into the END SHIFT dropdown
+async function loadActiveShifts() {
+  const storeSel = document.getElementById('storeSelect');
+  if (!storeSel) return;
+  const storeVal = storeSel.value || 's107';
+
+  const { data, error } = await sb
+    .from('shift_logs')
+    .select('id, date, shift, in_clerk')
+    .eq('store', storeVal)
+    .eq('status', 'started')
+    .order('date', { ascending: false });
+
+  const endSel = document.getElementById('endShiftSelect');
+  endSel.innerHTML = '<option value="">— Select started shift —</option>';
+
+  if (error || !data) return;
 
   data.forEach(row => {
     const opt = document.createElement('option');
@@ -395,13 +491,13 @@ async function startShift() {
   const entry = {
     id: 'shift_' + now,
     store: storeSel.value || 's107',
-    store_name: '',      // optional; fill if you want
-    store_city: '',      // optional
+    store_name: '',
+    store_city: '',
     date: dateInp.value || new Date().toISOString().split('T')[0],
     shift: shiftSel.value,
     in_clerk: clerkInp.value || session.user.name || '',
     out_clerk: null,
-    kratom: {},          // JSONB
+    kratom: {},
     lottery: null,
     status: 'started',
     ts_start: now,
@@ -423,9 +519,15 @@ async function startShift() {
     };
   });
 
-  const { error } = await sb.from('shift_logs').insert([entry]);
-  if (error) {
-    alert('Error starting shift: ' + error.message);
+  try {
+    const { error } = await sb.from('shift_logs').insert([entry]);
+    if (error) {
+      alert('Supabase error: ' + JSON.stringify(error));
+      return;
+    }
+  } catch (e) {
+    alert('JS error in startShift: ' + e.name + ': ' + e.message);
+    console.error(e);
     return;
   }
 
@@ -434,65 +536,48 @@ async function startShift() {
   await loadActiveShifts();
 }
 
-async function completeShift() {
-  if (!session || !session.user) {
-    alert('You must be logged in to complete a shift.');
-    return;
+
+/* ================= INIT ================= */
+function init() {
+  // login form
+  const lf = document.getElementById('loginForm');
+  lf.addEventListener('submit', doLogin);
+
+  // restore session if present
+  const saved = sessionStorage.getItem('ss');
+  if (saved) {
+    session = JSON.parse(saved);
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('appScreen').classList.remove('hidden');
+    document.getElementById('userChip').innerHTML =
+      `${session.user.name} <button onclick="doLogout()" class="underline text-xs">Logout</button>`;
+    document.getElementById('userChip').classList.remove('hidden');
+    if (session.user.role === 'admin') document.getElementById('adminTabBtn').classList.remove('hidden');
+    loadActiveShifts();
   }
 
-  const shiftId = document.getElementById('endShiftSelect').value;
-  if (!shiftId) {
-    alert('Select a shift');
-    return;
-  }
+  buildStartKratomTable();
+  renderEndKratomTable();
 
-  const { data, error: fetchError } = await sb
-    .from('shift_logs')
-    .select('kratom')
-    .eq('id', shiftId)
-    .single();
-
-  if (fetchError) {
-    alert('Error loading shift: ' + fetchError.message);
-    return;
-  }
-
-  const kratomData = data?.kratom || {};
-
-  KRATOM.forEach(p => {
-    if (!kratomData[p.id]) kratomData[p.id] = {};
-    kratomData[p.id].end = {
-      office: {
-        bottles: parseInt(document.getElementById(`end-ob-${p.id}`).value) || 0,
-        cases:  parseInt(document.getElementById(`end-oc-${p.id}`).value) || 0
-      },
-      floor: {
-        bottles: parseInt(document.getElementById(`end-fb-${p.id}`).value) || 0,
-        cases:  parseInt(document.getElementById(`end-fc-${p.id}`).value) || 0
-      },
-      sales_bottles: parseInt(document.getElementById(`end-sales-${p.id}`).value) || 0
-    };
+  document.getElementById('addUserForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!session || session.user.role !== 'admin') {
+      alert('Only admins can add users');
+      return;
+    }
+    await sb.from('app_users').insert([{
+      id: 'u' + Date.now(),
+      name: document.getElementById('newName').value,
+      username: document.getElementById('newUsername').value,
+      password: document.getElementById('newPassword').value,
+      role: document.getElementById('newRole').value
+    }]);
+    alert('User created!');
   });
-
-  const { error } = await sb
-    .from('shift_logs')
-    .update({
-      out_clerk: document.getElementById('endClerk').value || session.user.name || '',
-      kratom: kratomData,
-      status: 'completed',
-      ts_end: Date.now()
-    })
-    .eq('id', shiftId);
-
-  if (error) {
-    alert('Error completing shift: ' + error.message);
-    return;
-  }
-
-  alert('Shift completed!');
-  await loadActiveShifts();
-  showTab('review');
 }
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
 
 // ================ UI HELPERS ================
 function showTab(tab) {
