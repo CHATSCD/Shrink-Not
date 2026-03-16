@@ -229,10 +229,132 @@
       </div>
     </div>
 
-    <!-- REVIEW TAB -->
-    <div id="tab-review" class="hidden">
-      <div id="reviewContent" class="text-center text-gray-500 py-12">Last shift review will appear here</div>
-    </div>
+    // ============ REVIEW TAB ============
+async function loadReviewTab() {
+  const storeSel = document.getElementById('storeSelect');
+  if (!storeSel) return;
+  const storeVal = storeSel.value || 's107';
+
+  const { data, error } = await sb
+    .from('shift_logs')
+    .select('*')
+    .eq('store', storeVal)
+    .eq('status', 'completed')
+    .order('ts_end', { ascending: false })
+    .limit(10);
+
+  const reviewContent = document.getElementById('reviewContent');
+  
+  if (error || !data || data.length === 0) {
+    reviewContent.innerHTML = '<div class="text-gray-500 py-12">No completed shifts found</div>';
+    return;
+  }
+
+  let html = '<div class="space-y-4">';
+  
+  data.forEach(shift => {
+    const kratom = shift.kratom || {};
+    html += `
+      <div class="border rounded-lg p-4 bg-gray-50">
+        <div class="flex justify-between items-start mb-3">
+          <div>
+            <h3 class="font-bold text-lg">${shift.shift} Shift</h3>
+            <p class="text-sm text-gray-600">${shift.date} | ${shift.store} | ${shift.in_clerk} → ${shift.out_clerk}</p>
+          </div>
+          <span class="text-sm text-green-600 font-bold">✓ Completed</span>
+        </div>
+        
+        <div class="grid grid-cols-3 gap-4 text-sm">
+          <div>
+            <div class="font-medium">Office Start</div>
+            <div>Total: ${countTotalBottlesAndCases(kratom, 'begin', 'office')}</div>
+          </div>
+          <div>
+            <div class="font-medium">Office End</div>
+            <div>Total: ${countTotalBottlesAndCases(kratom, 'end', 'office')}</div>
+          </div>
+          <div>
+            <div class="font-medium">Variance</div>
+            <div class="${varianceClass(countVariance(kratom, 'office'))}">
+              ${countVariance(kratom, 'office')}
+            </div>
+          </div>
+          
+          <div>
+            <div class="font-medium">Floor Start</div>
+            <div>Total: ${countTotalBottlesAndCases(kratom, 'begin', 'floor')}</div>
+          </div>
+          <div>
+            <div class="font-medium">Floor End</div>
+            <div>Total: ${countTotalBottlesAndCases(kratom, 'end', 'floor')}</div>
+          </div>
+          <div>
+            <div class="font-medium">Variance</div>
+            <div class="${varianceClass(countVariance(kratom, 'floor'))}">
+              ${countVariance(kratom, 'floor')}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  html += '</div>';
+  reviewContent.innerHTML = html;
+}
+
+// Helper functions for review calculations
+function countTotalBottlesAndCases(kratom, phase, location) {
+  let total = 0;
+  KRATOM.forEach(p => {
+    const data = kratom[p.id]?.[phase]?.[location];
+    if (data) {
+      total += (data.bottles || 0) + (data.cases || 0) * 12;
+    }
+  });
+  return total;
+}
+
+function countVariance(kratom, location) {
+  const startTotal = countTotalBottlesAndCases(kratom, 'begin', location);
+  const endTotal = countTotalBottlesAndCases(kratom, 'end', location);
+  const salesTotal = countSalesTotal(kratom);
+  return startTotal - (endTotal + salesTotal);
+}
+
+function countSalesTotal(kratom) {
+  let total = 0;
+  KRATOM.forEach(p => {
+    total += kratom[p.id]?.end?.sales_bottles || 0;
+  });
+  return total;
+}
+
+function varianceClass(variance) {
+  if (variance === 0) return 'text-green-600 font-bold';
+  if (variance > 0) return 'text-red-600 font-bold';
+  return 'text-orange-600 font-bold';
+}
+
+// Update showTab to load review data
+function showTab(tab) {
+  document.getElementById('tab-count').classList.toggle('hidden', tab !== 'count');
+  document.getElementById('tab-review').classList.toggle('hidden', tab !== 'review');
+  document.getElementById('tab-admin').classList.toggle('hidden', tab !== 'admin');
+
+  const buttons = document.querySelectorAll('.tab-btn');
+  buttons.forEach(btn => btn.classList.remove('active'));
+  
+  if (tab === 'count') {
+    buttons[0].classList.add('active');
+  } else if (tab === 'review') {
+    buttons[1].classList.add('active');
+    loadReviewTab();  // Load review data when tab opens
+  } else if (tab === 'admin') {
+    document.getElementById('adminTabBtn').classList.add('active');
+  }
+}
+
 
     <!-- ADMIN TAB -->
     <div id="tab-admin" class="hidden">
