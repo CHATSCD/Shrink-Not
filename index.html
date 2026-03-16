@@ -52,10 +52,86 @@
 <header style="background:#003087;" class="shadow-lg sticky top-0 z-50">
   <div class="max-w-7xl mx-auto px-3 py-2 flex items-center gap-2">
     <div class="text-lg font-black tracking-widest text-white">SHRINK SHIELD</div>
-    <div id="userChip" class="ml-auto hidden flex items-center gap-2 bg-blue-800 text-white text-xs px-3 py-1 rounded-full"></div>
-    <select id="storeSelect" class="text-xs bg-blue-900 text-white rounded px-2 py-1"></select>
+   
+    <header style="background:#003087;" class="shadow-lg sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-3 py-2 flex flex-wrap items-center gap-2">
+
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <img src="logo.png" onerror="this.style.display='none';document.getElementById('logoText').classList.remove('hidden');" class="h-10 rounded">
+      <div id="logoText" class="hidden bg-white rounded px-1.5 py-0.5 text-center leading-tight">
+        <div style="color:#003087;font-weight:900;font-size:10px;letter-spacing:.5px;">KEITH'S</div>
+        <div style="color:#C8102E;font-weight:900;font-size:8px;letter-spacing:.3px;">SUPERSTORES</div>
+      </div>
+      <div>
+        <div class="text-lg font-black tracking-widest text-white">SHRINK SHIELD</div>
+        <div class="text-xs text-blue-200 leading-tight">Loss Prevention System</div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2 ml-auto flex-wrap">
+      <div id="userChip" class="hidden flex items-center gap-1.5 bg-blue-800 rounded-full px-3 py-1"></div>
+      <select id="storeSelect" onchange="onStoreChange()"
+        class="text-xs bg-blue-900 text-white border border-blue-700 rounded px-2 py-1.5 w-64">
+        <optgroup label="── Hattiesburg Area ──">
+          <option value="s135">#135 — 5331 Old Hwy 11, Hattiesburg</option>
+          <option value="s137">#137 — 5170 W. 4th St., Hattiesburg</option>
+          <option value="s150">#150 — 6750 Hwy 49, Hattiesburg</option>
+          <option value="s151">#151 — 7276 Hwy 49, Hattiesburg</option>
+          <option value="s157">#157 — 2462 US Hwy 49, Hattiesburg</option>
+          <option value="s173">#173 — 1858 Evelyn Gandy Pkwy, Hattiesburg</option>
+          <option value="s175">#175 — 101 Carterville Rd, Petal</option>
+        </optgroup>
+        <optgroup label="── Pine Belt ──">
+          <option value="s100">#100 — 304 Hill St., Ellisville</option>
+          <option value="s105">#105 — 5213 Hwy 11 N., Ellisville</option>
+          <option value="sMos">Moselle — 59 Moselle Seminary Rd.</option>
+          <option value="s117">#117 — 2675 Hwy 15, Bay Springs</option>
+          <option value="s125">#125 — 2078 US Hwy 49, Seminary</option>
+          <option value="s127">#127 — 3030 Hwy 49, Collins</option>
+          <option value="s130">#130 — 1475 Hwy 98 E., Columbia</option>
+          <option value="s140">#140 — 1196 Rock Hill Rd., Mount Olive</option>
+          <option value="s155">#155 — 8431 Hwy 98, Sumrall</option>
+          <option value="s185">#185 — 918 E. Main Ave, Lumberton</option>
+        </optgroup>
+        <optgroup label="── Gulf Coast ──">
+          <option value="s082">#82 — 21000 Hwy 613, Moss Point</option>
+          <option value="s085">#85 — 6820 Hwy 613, Moss Point</option>
+          <option value="s086">#86 — 6718 Hwy 63, Moss Point</option>
+          <option value="s088">#88 — 10909 Hwy 57, Vancleave</option>
+          <option value="s089">#89 — 7501 Washington Ave, Ocean Springs</option>
+          <option value="s090">#90 — Ocean Springs</option>
+          <option value="s107">#107 — 26181 Hwy 49 S., Saucier</option>
+          <option value="s108">#108 — 19000 28th St., Long Beach</option>
+          <option value="s109">#109 — 102 E Beach Blvd, Pass Christian</option>
+          <option value="s112">#112 — 819 Hwy 90, Gautier</option>
+          <option value="s182">#182 — 10513 Hwy 603, Waveland</option>
+          <option value="s183">#183 — 701 Hwy 90, Bay St. Louis</option>
+          <option value="s184">#184 — 4955 Hwy 90, Bay St. Louis</option>
+        </optgroup>
+        <optgroup label="── South MS ──">
+          <option value="s080">#80 — 6239 Hwy 98, Lucedale</option>
+          <option value="s081">#81 — 7292 Hwy 63 S., Lucedale</option>
+          <option value="s091">#91 — 1220 W. Central Ave., Wiggins</option>
+          <option value="s120">#120 — 5812 Hwy 11, Purvis</option>
+          <option value="s122">#122 — 5791 Hwy 11, Purvis</option>
+          <option value="s123">#123 — 361 Hwy 589, Purvis</option>
+          <option value="s160">#160 — 114 Magnolia Dr., Wiggins</option>
+          <option value="s161">#161 — 3333 Hwy 49, Wiggins</option>
+          <option value="s192">#192 — 1405 Hwy 43 N., Picayune</option>
+          <option value="s194">#194 — 498 W. Union Rd., Carriere</option>
+          <option value="s196">#196 — 4670 Hwy 53, Poplarville</option>
+        </optgroup>
+        <optgroup label="── Alabama ──">
+          <option value="s060">#60 — 13515 Moffett Rd, Wilmer, AL</option>
+        </optgroup>
+      </select>
+      <div id="hdrClock" class="text-xs text-blue-200 hidden sm:block text-right"></div>
+    </div>
   </div>
 </header>
+  
+    
+
 
 <div class="max-w-7xl mx-auto px-3 pt-3 pb-10">
 
@@ -147,7 +223,7 @@ const USERS = {
   'admin':       {password:'1234', name:'Admin User', role:'admin'},
   'C.Riley':     {password:'Store107!', name:'Chelsea Riley', role:'employee'},
   'A.Herrin':    {password:'Store107!', name:'Amber Herrin', role:'store_leader'},
-  'S.Dubuisson': {password:'Store107!', name:'Shaun Dubuisson', role:'admin'},
+  'S.Dubuisson': {password:'Store107!', name:'Shaun Dubuisson', role:'store_leader'},
   'C.Davenport': {password:'Store107!', name:'Caitlyne Davenport', role:'employee'}
 };
 
