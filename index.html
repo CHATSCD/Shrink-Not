@@ -145,42 +145,66 @@
       </div>
 
       <!-- START SHIFT -->
-      <div id="sub-start">
-        <div class="flex flex-wrap gap-3 mb-4">
-          <div>
-            <label class="lbl">SHIFT</label>
-            <select id="startShiftSel" class="inp w-32">
-              <option>Morning</option>
-              <option>Afternoon</option>
-              <option>Evening</option>
-              <option>Night</option>
-            </select>
-          </div>
-          <div>
-            <label class="lbl">DATE</label>
-            <input id="startDate" type="date" class="inp w-36">
-          </div>
-          <div>
-            <label class="lbl">INCOMING CLERK</label>
-            <input id="startClerk" type="text" class="inp w-40" placeholder="Your name">
-          </div>
-          <button onclick="startShift()" class="ml-auto bg-[#003087] text-white px-6 py-2 rounded font-bold">Start Shift</button>
-        </div>
+    async function startShift() {
+  if (!session || !session.user) {
+    alert('You must be logged in to start a shift.');
+    return;
+  }
 
-        <table class="w-full text-sm">
-          <thead>
-            <tr>
-              <th class="pb-2">PRODUCT</th>
-              <th class="text-center pb-2" colspan="2">OFFICE</th>
-              <th class="text-center pb-2" colspan="2">SALES FLOOR</th>
-            </tr>
-            <tr class="text-xs text-gray-400">
-              <th></th><th>Bottles</th><th>Cases</th><th>Bottles</th><th>Cases</th>
-            </tr>
-          </thead>
-          <tbody id="startKratomBody"></tbody>
-        </table>
-      </div>
+  const now = Date.now();
+  const storeSel = document.getElementById('storeSelect');
+  const dateInp = document.getElementById('startDate');
+  const shiftSel = document.getElementById('startShiftSel');
+  const clerkInp = document.getElementById('startClerk');
+
+  // build the entry object FIRST
+  const entry = {
+    id: 'shift_' + now,
+    store: storeSel.value || 's107',
+    store_name: '',
+    store_city: '',
+    date: dateInp.value || new Date().toISOString().split('T')[0],
+    shift: shiftSel.value,
+    in_clerk: clerkInp.value || session.user.name || '',
+    out_clerk: null,
+    kratom: {},
+    lottery: null,
+    status: 'started',
+    ts_start: now,
+    ts_end: null
+  };
+
+  KRATOM.forEach(p => {
+    entry.kratom[p.id] = {
+      begin: {
+        office: {
+          bottles: parseInt(document.getElementById(`ob-${p.id}`).value) || 0,
+          cases:  parseInt(document.getElementById(`oc-${p.id}`).value) || 0
+        },
+        floor: {
+          bottles: parseInt(document.getElementById(`fb-${p.id}`).value) || 0,
+          cases:  parseInt(document.getElementById(`fc-${p.id}`).value) || 0
+        }
+      }
+    };
+  });
+
+  try {
+    const { error } = await sb.from('shift_logs').insert([entry]);
+    if (error) {
+      alert('Supabase error: ' + JSON.stringify(error));
+      return;
+    }
+  } catch (e) {
+    alert('JS error in startShift: ' + e.name + ': ' + e.message);
+    console.error(e);
+    return;
+  }
+
+  alert('Shift started!');
+  showCountSub('end');
+  await loadActiveShifts();
+}
 
       <!-- END SHIFT -->
       <div id="sub-end" class="hidden">
