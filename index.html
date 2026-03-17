@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shrink Shield - Shift Manager</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body{
+font-family:Arial;
+background:#f4f6f8;
+padding:30px;
+}
+
+.container{
+max-width:600px;
+margin:auto;
+background:white;
+padding:25px;
+border-radius:8px;
+box-shadow:0 2px 10px rgba(0,0,0,.1);
+}
+
+h1{
+text-align:center;
+margin-bottom:20px;
+}
+
+select,button{
+width:100%;
+padding:10px;
+margin-top:10px;
+font-size:16px;
+}
+
+button{
+cursor:pointer;
+background:#2563eb;
+color:white;
+border:none;
+border-radius:6px;
+}
+
+button:hover{
+background:#1d4ed8;
+}
+
+.endBtn{
+background:#dc2626;
+}
+
+.endBtn:hover{
+background:#b91c1c;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Shrink Shield Shift Manager</h1>
+
+<label>Store</label>
+<select id="storeSelect">
+<option value="s101">Store 101</option>
+<option value="s102">Store 102</option>
+<option value="s103">Store 103</option>
+<option value="s104">Store 104</option>
+<option value="s105">Store 105</option>
+<option value="s106">Store 106</option>
+<option value="s107">Store 107</option>
+<option value="s108">Store 108</option>
+<option value="s109">Store 109</option>
+<option value="s110">Store 110</option>
+</select>
+
+<button onclick="startShift()">Start Shift</button>
+
+<hr>
+
+<label>Active Shifts</label>
+<select id="shiftSelect"></select>
+
+<button class="endBtn" onclick="endShift()">End Selected Shift</button>
+
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
