@@ -1,1 +1,701 @@
-<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>Performance Optimized Page</title>\n    <style>\n        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }\n        .loading { display: none; text-align: center; padding: 20px; }\n        .error { color: red; text-align: center; }\n    </style>\n</head>\n<body>\n    <div class="loading" id="loading">Loading...</div>\n    <div id="content">\n        <h1>Welcome to the Optimized Page</h1>\n        <p>This page is built with performance and user experience in mind.</p>\n    </div>\n    <script>\n        const loadingElement = document.getElementById('loading');\n        const contentElement = document.getElementById('content');\n        loadingElement.style.display = 'block';\n\n        // Simulate data load with error handling\n        async function fetchData() {\n            try {\n                // Simulate fetching data\n                let response = await new Promise((resolve, reject) => {\n                    setTimeout(() => { resolve('Data loaded!'); }, 2000);\n                    // Uncomment the next line to simulate an error\n                    // reject('Failed to load data.');\n                });\n                contentElement.innerHTML += `<p>${response}</p>`;\n            } catch (error) {\n                contentElement.innerHTML = `<p class='error'>${error}</p>`;\n            } finally {\n                loadingElement.style.display = 'none';\n            }\n        }\n\n        fetchData();\n    <\/script>\n</body>\n</html>
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shrink Shield — Keith's Superstores</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<style>
+:root{--kb:#003087;--kr:#C8102E;}
+body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;}
+
+.tab-btn{transition:all .2s;}
+.tab-btn.active{background:#003087;color:#fff;border-bottom:3px solid #C8102E;}
+
+.sub-btn{transition:all .15s;border-bottom:2px solid transparent;}
+.sub-btn.active{color:#003087;border-bottom:2px solid #003087;font-weight:700;}
+
+.num-inp{width:70px;border:1px solid #d1d5db;border-radius:6px;padding:4px;text-align:center;}
+
+.lbl{font-size:10px;font-weight:700;color:#6b7280;}
+.inp{border:1px solid #d1d5db;border-radius:6px;padding:6px;font-size:13px;}
+</style>
+</head>
+
+<body>
+
+<div id="loginScreen" class="fixed inset-0 flex items-center justify-center bg-[#003087]">
+
+<div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm">
+
+<div class="text-center mb-6">
+<div class="text-xl font-black tracking-widest text-gray-800">SHRINK SHIELD</div>
+<div class="text-sm text-gray-500">Keith's Superstores</div>
+</div>
+
+<form id="loginForm" class="space-y-3">
+
+<input id="loginUser" type="text" class="inp w-full" placeholder="Username">
+
+<input id="loginPass" type="password" class="inp w-full" placeholder="Password">
+
+<div id="loginError" class="hidden text-red-600 text-sm text-center"></div>
+
+<button type="submit" class="w-full bg-[#003087] text-white py-3 rounded font-bold">
+Sign In
+</button>
+
+</form>
+
+</div>
+</div>
+
+<div id="appScreen" class="hidden">
+
+<header class="bg-[#003087] text-white px-4 py-3 flex items-center justify-between">
+
+<div class="font-black tracking-widest text-lg">SHRINK SHIELD</div>
+
+<select id="storeSelect" onchange="onStoreChange()" 
+class="text-xs bg-blue-900 text-white border border-blue-700 rounded px-2 py-1.5 w-64">
+
+<optgroup label="── Hattiesburg Area ──">
+<option value="s135">#135 — 5331 Old Hwy 11, Hattiesburg</option>
+<option value="s137">#137 — 5170 W. 4th St., Hattiesburg</option>
+<option value="s150">#150 — 6750 Hwy 49, Hattiesburg</option>
+<option value="s151">#151 — 7276 Hwy 49, Hattiesburg</option>
+<option value="s157">#157 — 2462 US Hwy 49, Hattiesburg</option>
+<option value="s173">#173 — 1858 Evelyn Gandy Pkwy, Hattiesburg</option>
+<option value="s175">#175 — 101 Carterville Rd, Petal</option>
+</optgroup>
+
+<optgroup label="── Pine Belt ──">
+<option value="s100">#100 — 304 Hill St., Ellisville</option>
+<option value="s105">#105 — 5213 Hwy 11 N., Ellisville</option>
+<option value="sMos">Moselle — 59 Moselle Seminary Rd.</option>
+<option value="s117">#117 — 2675 Hwy 15, Bay Springs</option>
+<option value="s125">#125 — 2078 US Hwy 49, Seminary</option>
+<option value="s127">#127 — 3030 Hwy 49, Collins</option>
+<option value="s130">#130 — 1475 Hwy 98 E., Columbia</option>
+<option value="s140">#140 — 1196 Rock Hill Rd., Mount Olive</option>
+<option value="s155">#155 — 8431 Hwy 98, Sumrall</option>
+<option value="s185">#185 — 918 E. Main Ave, Lumberton</option>
+</optgroup>
+
+<optgroup label="── Gulf Coast ──">
+<option value="s082">#82 — 21000 Hwy 613, Moss Point</option>
+<option value="s085">#85 — 6820 Hwy 613, Moss Point</option>
+<option value="s086">#86 — 6718 Hwy 63, Moss Point</option>
+<option value="s088">#88 — 10909 Hwy 57, Vancleave</option>
+<option value="s089">#89 — 7501 Washington Ave, Ocean Springs</option>
+<option value="s090">#90 — Ocean Springs</option>
+<option value="s107">#107 — 26181 Hwy 49 S., Saucier</option>
+<option value="s108">#108 — 19000 28th St., Long Beach</option>
+<option value="s109">#109 — 102 E Beach Blvd, Pass Christian</option>
+<option value="s112">#112 — 819 Hwy 90, Gautier</option>
+<option value="s182">#182 — 10513 Hwy 603, Waveland</option>
+<option value="s183">#183 — 701 Hwy 90, Bay St. Louis</option>
+<option value="s184">#184 — 4955 Hwy 90, Bay St. Louis</option>
+</optgroup>
+
+<optgroup label="── South MS ──">
+<option value="s080">#80 — 6239 Hwy 98, Lucedale</option>
+<option value="s081">#81 — 7292 Hwy 63 S., Lucedale</option>
+<option value="s091">#91 — 1220 W. Central Ave., Wiggins</option>
+<option value="s120">#120 — 5812 Hwy 11, Purvis</option>
+<option value="s122">#122 — 5791 Hwy 11, Purvis</option>
+<option value="s123">#123 — 361 Hwy 589, Purvis</option>
+<option value="s160">#160 — 114 Magnolia Dr., Wiggins</option>
+<option value="s161">#161 — 3333 Hwy 49, Wiggins</option>
+<option value="s192">#192 — 1405 Hwy 43 N., Picayune</option>
+<option value="s194">#194 — 498 W. Union Rd., Carriere</option>
+<option value="s196">#196 — 4670 Hwy 53, Poplarville</option>
+</optgroup>
+
+<optgroup label="── Alabama ──">
+<option value="s060">#60 — 13515 Moffett Rd, Wilmer, AL</option>
+</optgroup>
+
+</select>
+
+<div id="userChip"></div>
+
+</header>
+
+<div class="max-w-7xl mx-auto px-3 pt-3 pb-10">
+
+<div class="flex gap-1 bg-white rounded-t-xl shadow px-1 pt-1">
+<button class="tab-btn active flex-1 py-2 text-xs font-bold" onclick="showTab('count')">COUNT</button>
+<button class="tab-btn flex-1 py-2 text-xs font-bold" onclick="showTab('review')">REVIEW</button>
+<button class="tab-btn flex-1 py-2 text-xs font-bold" onclick="showTab('analytics')">ANALYTICS</button>
+<button id="adminTabBtn" class="tab-btn flex-1 py-2 text-xs font-bold" onclick="showTab('admin')">ADMIN</button>
+</div>
+
+<div class="bg-white rounded-b-xl shadow-lg p-4">
+
+<div id="tab-count">
+
+<div class="flex gap-4 border-b mb-4">
+<button class="sub-btn active pb-2 text-sm" id="countSubStart" onclick="showCountSub('start')">START SHIFT</button>
+<button class="sub-btn pb-2 text-sm text-gray-500" id="countSubEnd" onclick="showCountSub('end')">END SHIFT</button>
+</div>
+
+<div id="sub-start">
+
+<div class="flex flex-wrap gap-3 mb-4">
+
+<select id="startShiftSel" class="inp w-32">
+<option>Morning</option>
+<option>Afternoon</option>
+<option>Evening</option>
+<option>Night</option>
+</select>
+
+<input id="startDate" type="date" class="inp w-36">
+
+<input id="startClerk" type="text" class="inp w-40" placeholder="Incoming clerk">
+
+<button id="startShiftBtn" onclick="startShift()" class="ml-auto bg-[#003087] text-white px-6 py-2 rounded font-bold">
+Start Shift
+</button>
+
+</div>
+
+<table class="w-full text-sm">
+<thead>
+<tr>
+<th>Product</th>
+<th colspan="2">Office</th>
+<th colspan="2">Floor</th>
+</tr>
+<tr class="text-xs text-gray-400">
+<th></th>
+<th>Bottles</th>
+<th>Cases</th>
+<th>Bottles</th>
+<th>Cases</th>
+</tr>
+</thead>
+<tbody id="startKratomBody"></tbody>
+</table>
+
+</div>
+
+<div id="sub-end" class="hidden">
+
+<div class="flex gap-3 mb-4">
+
+<select id="endShiftSelect" class="inp w-64">
+<option value="">— Select started shift —</option>
+</select>
+
+<input id="endClerk" type="text" class="inp w-40" placeholder="Outgoing clerk">
+
+<button id="completeShiftBtn" onclick="completeShift()" class="ml-auto bg-[#003087] text-white px-6 py-2 rounded font-bold">
+Complete Shift
+</button>
+
+</div>
+<div id="endShiftMessage" class="text-sm text-gray-500 mb-3"></div>
+
+<table class="w-full text-sm">
+<thead>
+<tr>
+<th>Product</th>
+<th colspan="2">Office End</th>
+<th colspan="2">Floor End</th>
+<th>Sales</th>
+</tr>
+</thead>
+<tbody id="endKratomBody"></tbody>
+</table>
+
+</div>
+
+</div>
+
+<div id="tab-review" class="hidden">
+<h3 class="font-bold mb-4">Last 10 Completed Shifts</h3>
+<div id="reviewContent"></div>
+</div>
+
+<div id="tab-analytics" class="hidden">
+<h3 class="font-bold mb-4">Shift Analytics</h3>
+<div class="flex gap-2 mb-4">
+  <div id="analyticsSummary" class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1"></div>
+  <button id="exportAnalyticsBtn" onclick="exportAnalytics()" class="bg-[#003087] text-white px-4 py-2 rounded font-bold">Export CSV</button>
+</div>
+<div id="topClerks" class="mb-4"></div>
+<div class="p-4 bg-white rounded shadow">
+  <canvas id="analyticsChart" width="400" height="200"></canvas>
+</div>
+</div>
+
+<div id="tab-admin" class="hidden">
+
+<h3 class="font-bold mb-4">Add New User</h3>
+
+<form id="addUserForm" class="space-y-4 max-w-md">
+
+<input id="newName" placeholder="Full Name" class="inp w-full">
+<input id="newUsername" placeholder="Username" class="inp w-full">
+<input id="newPassword" placeholder="Password" class="inp w-full">
+
+<select id="newRole" class="inp w-full">
+<option value="employee">Employee</option>
+<option value="store_leader">Store Leader</option>
+<option value="admin">Admin</option>
+</select>
+
+<button class="bg-[#003087] text-white px-8 py-2 rounded w-full">
+Create User
+</button>
+
+</form>
+
+</div>
+
+</div>
+</div>
+
+<script>
+
+const SUPABASE_URL='https://ylfsqjbqhewpfiooytlg.supabase.co'
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsZnNxamJxaGV3cGZpb295dGxnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NzQwODQsImV4cCI6MjA4ODM1MDA4NH0.Ssl5J6ktZIVtLd2cq8vH7PWdR4-yZwI5tt4PtXkVqWk'
+
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
+
+// ================ COUNT DATA ================
+const KRATOM = [
+  {id:'k1',name:'Viva Zen Ultimate'},
+  {id:'k2',name:'Viva Zen Red Top'},
+  {id:'k3',name:'Viva Zen Silver Top'},
+  {id:'k4',name:'Kryptic Kratom Relaxation'},
+  {id:'k5',name:'Good Mood'},
+  {id:'k6',name:'Viva Zen yellow Top'},
+  {id:'k7',name:'K-Shot'},
+  {id:'k8',name:'feel free'}
+];
+
+
+function buildStartKratomTable(){
+
+const tbody=document.getElementById('startKratomBody')
+tbody.innerHTML=''
+
+KRATOM.forEach(p=>{
+
+const tr=document.createElement('tr')
+
+tr.innerHTML=`
+<td>${p.name}</td>
+<td><input id="ob-${p.id}" class="num-inp" type="number" value="0"></td>
+<td><input id="oc-${p.id}" class="num-inp" type="number" value="0"></td>
+<td><input id="fb-${p.id}" class="num-inp" type="number" value="0"></td>
+<td><input id="fc-${p.id}" class="num-inp" type="number" value="0"></td>
+`
+
+tbody.appendChild(tr)
+
+})
+
+}
+
+function renderEndKratomTable(){
+
+const tbody=document.getElementById('endKratomBody')
+tbody.innerHTML=''
+
+KRATOM.forEach(p=>{
+
+const tr=document.createElement('tr')
+
+tr.innerHTML=`
+<td>${p.name}</td>
+<td><input id="end-ob-${p.id}" class="num-inp" type="number" value="0"></td>
+<td><input id="end-oc-${p.id}" class="num-inp" type="number" value="0"></td>
+<td><input id="end-fb-${p.id}" class="num-inp" type="number" value="0"></td>
+<td><input id="end-fc-${p.id}" class="num-inp" type="number" value="0"></td>
+<td><input id="end-sales-${p.id}" class="num-inp" type="number" value="0"></td>
+`
+
+tbody.appendChild(tr)
+
+})
+
+}
+
+async function loadStartedShifts() {
+  const store = document.getElementById('storeSelect').value;
+  const {data, error} = await sb.from('shift_logs').select('*').eq('store', store).eq('status', 'started');
+  const select = document.getElementById('endShiftSelect');
+  const message = document.getElementById('endShiftMessage');
+  const completeBtn = document.getElementById('completeShiftBtn');
+
+  if (error) {
+    console.error(error);
+    message.textContent = 'Failed to load started shifts.';
+    return;
+  }
+
+  select.innerHTML = '<option value="">— Select started shift —</option>';
+  message.textContent = '';
+
+  if (!data || data.length === 0) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = 'No started shifts available for selected store';
+    select.appendChild(opt);
+    select.disabled = true;
+    completeBtn.disabled = true;
+    completeBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    message.textContent = 'No shift is currently started, please start a shift first.';
+    return;
+  }
+
+  select.disabled = false;
+  completeBtn.disabled = false;
+  completeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+  data.forEach(shift => {
+    const opt = document.createElement('option');
+    opt.value = shift.id;
+    opt.textContent = `${shift.shift} ${shift.date} - ${shift.in_clerk}`;
+    select.appendChild(opt);
+  });
+}
+
+function showTab(tab){
+
+document.getElementById('tab-count').classList.toggle('hidden',tab!=='count')
+document.getElementById('tab-review').classList.toggle('hidden',tab!=='review')
+document.getElementById('tab-analytics').classList.toggle('hidden',tab!=='analytics')
+document.getElementById('tab-admin').classList.toggle('hidden',tab!=='admin')
+
+if (tab === 'review') loadReview();
+if (tab === 'analytics') loadAnalytics();
+
+}
+
+function showCountSub(type){
+
+const start=type==='start'
+
+document.getElementById('sub-start').classList.toggle('hidden',!start)
+document.getElementById('sub-end').classList.toggle('hidden',start)
+
+if (!start) {
+  // when user opens End Shift, refresh the list to show latest opened shifts
+  loadStartedShifts();
+}
+
+}
+
+function onStoreChange() {
+  loadStartedShifts();
+}
+
+async function startShift(){
+
+const store=document.getElementById('storeSelect').value
+const shift=document.getElementById('startShiftSel').value
+const date=document.getElementById('startDate').value
+const clerk=document.getElementById('startClerk').value
+
+if (!store || !shift || !date || !clerk.trim()) {
+  alert('Please fill in store, shift, date, and incoming clerk before starting.');
+  return;
+}
+
+const startButton = document.getElementById('startShiftBtn');
+if (startButton) startButton.disabled = true;
+
+const kratom = {};
+KRATOM.forEach(p => {
+  kratom[p.id] = {
+    ob: parseInt(document.getElementById(`ob-${p.id}`).value) || 0,
+    oc: parseInt(document.getElementById(`oc-${p.id}`).value) || 0,
+    fb: parseInt(document.getElementById(`fb-${p.id}`).value) || 0,
+    fc: parseInt(document.getElementById(`fc-${p.id}`).value) || 0,
+  };
+});
+
+const entry={
+ id:'shift_'+Date.now(),
+ store:store,
+ shift:shift,
+ date:date,
+ in_clerk:clerk.trim(),
+ status:'started',
+ ts_start:Date.now(),
+ kratom_start: kratom
+}
+
+const {error}=await sb.from('shift_logs').insert([entry])
+
+if(error){
+  alert(error.message)
+  if (startButton) startButton.disabled = false;
+  return
+}
+
+alert("Shift Started")
+loadStartedShifts();
+if (startButton) startButton.disabled = false;
+}
+
+async function completeShift() {
+  const shiftId = document.getElementById('endShiftSelect').value;
+  const clerk = document.getElementById('endClerk').value;
+  const shiftMessage = document.getElementById('endShiftMessage');
+
+  if (!shiftId) {
+    alert('Select a started shift to complete.');
+    return;
+  }
+  if (!clerk.trim()) {
+    alert('Enter the outgoing clerk name.');
+    return;
+  }
+
+  const completeBtn = document.getElementById('completeShiftBtn');
+  if (completeBtn) {
+    completeBtn.disabled = true;
+    completeBtn.classList.add('opacity-50', 'cursor-not-allowed');
+  }
+
+  const kratom_end = {};
+  KRATOM.forEach(p => {
+    kratom_end[p.id] = {
+      ob: parseInt(document.getElementById(`end-ob-${p.id}`).value) || 0,
+      oc: parseInt(document.getElementById(`end-oc-${p.id}`).value) || 0,
+      fb: parseInt(document.getElementById(`end-fb-${p.id}`).value) || 0,
+      fc: parseInt(document.getElementById(`end-fc-${p.id}`).value) || 0,
+      sales: parseInt(document.getElementById(`end-sales-${p.id}`).value) || 0,
+    };
+  });
+
+  const {error} = await sb.from('shift_logs').update({
+    out_clerk: clerk.trim(),
+    kratom_end: kratom_end,
+    status: 'completed',
+    ts_end: Date.now()
+  }).eq('id', shiftId);
+
+  if (error) {
+    alert(error.message);
+    if (shiftMessage) shiftMessage.textContent = 'Could not complete shift. Try again.';
+    if (completeBtn) {
+      completeBtn.disabled = false;
+      completeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+    return;
+  }
+
+  alert('Shift completed');
+  if (shiftMessage) shiftMessage.textContent = 'Shift completed successfully.';
+  loadStartedShifts();
+  if (completeBtn) {
+    completeBtn.disabled = false;
+    completeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+  }
+}
+
+async function loadReview() {
+  const {data, error} = await sb.from('shift_logs').select('*').eq('status', 'completed').order('ts_end', {ascending: false}).limit(10);
+  if (error) {
+    console.error(error);
+    return;
+  }
+  const div = document.getElementById('reviewContent');
+  div.innerHTML = '';
+  data.forEach(shift => {
+    const item = document.createElement('div');
+    item.className = 'mb-4 p-4 border rounded';
+    item.innerHTML = `<strong>${shift.store} - ${shift.shift} ${shift.date}</strong><br>In: ${shift.in_clerk}, Out: ${shift.out_clerk || 'N/A'}<br>Started: ${new Date(shift.ts_start).toLocaleString()}<br>Ended: ${shift.ts_end ? new Date(shift.ts_end).toLocaleString() : 'N/A'}`;
+    div.appendChild(item);
+  });
+}
+
+let analyticsChart;
+let analyticsCache = [];
+
+async function loadAnalytics() {
+  const {data, error} = await sb.from('shift_logs').select('*').eq('status', 'completed').order('ts_end', {ascending: false});
+  if (error) {
+    console.error(error);
+    document.getElementById('analyticsSummary').innerHTML = '<div class="text-red-600">Failed to load analytics.</div>';
+    return;
+  }
+
+  const totalShifts = data.length;
+  let totalSales = 0;
+  let totalShrink = 0;
+
+  const byShift = {};
+  const byStore = {};
+  const shrinkByStore = {};
+  const clerkShrink = {};
+
+  data.forEach(shift => {
+    byShift[shift.shift] = (byShift[shift.shift] || 0) + 1;
+    byStore[shift.store] = (byStore[shift.store] || 0) + 1;
+
+    const endData = shift.kratom_end || {};
+    const startData = shift.kratom_start || {};
+
+    const shiftSales = Object.values(endData).reduce((s, product) => s + (product.sales || 0), 0);
+    totalSales += shiftSales;
+
+    let shiftShrink = 0;
+    Object.keys(startData).forEach(key => {
+      const startProduct = startData[key] || {};
+      const endProduct = endData[key] || {ob:0,oc:0,fb:0,fc:0,sales:0};
+      const startQty = (startProduct.ob||0) + (startProduct.oc||0) + (startProduct.fb||0) + (startProduct.fc||0);
+      const endQty = (endProduct.ob||0) + (endProduct.oc||0) + (endProduct.fb||0) + (endProduct.fc||0);
+      const salesQty = (endProduct.sales||0);
+      shiftShrink += (startQty - endQty - salesQty);
+    });
+
+    totalShrink += shiftShrink;
+    shrinkByStore[shift.store] = (shrinkByStore[shift.store] || 0) + shiftShrink;
+
+    const clerk = (shift.out_clerk || shift.in_clerk || 'Unknown').trim();
+    clerkShrink[clerk] = (clerkShrink[clerk] || 0) + shiftShrink;
+  });
+
+  const avgShift = totalShifts ? (totalSales / totalShifts).toFixed(2) : 0;
+
+  const summary = document.getElementById('analyticsSummary');
+  summary.innerHTML = `
+  <div class="p-3 border rounded bg-white"><strong>Total completed shifts</strong><br>${totalShifts}</div>
+  <div class="p-3 border rounded bg-white"><strong>Total sales</strong><br>${totalSales}</div>
+  <div class="p-3 border rounded bg-white"><strong>Avg sales / shift</strong><br>${avgShift}</div>
+  <div class="p-3 border rounded bg-white"><strong>Total shrink (units)</strong><br>${totalShrink.toFixed(2)}</div>
+  <div class="p-3 border rounded bg-white"><strong>Stores tracked</strong><br>${Object.keys(byStore).length}</div>
+  `;
+
+  const topClerksEl = document.getElementById('topClerks');
+  const topClerks = Object.entries(clerkShrink)
+    .sort(([,a],[,b]) => b - a)
+    .filter(([,value]) => value > 0)
+    .slice(0,5);
+
+  if (topClerks.length > 0) {
+    topClerksEl.innerHTML = '<h4 class="font-bold mb-2">Top 5 clerks by shrink</h4>' +
+      '<ol class="list-decimal list-inside text-sm text-gray-700">' +
+      topClerks.map(([clerk, value]) => `<li>${clerk}: ${value.toFixed(2)} units</li>`).join('') +
+      '</ol>';
+  } else {
+    topClerksEl.innerHTML = '<div class="text-sm text-gray-500">No clerk shrink records yet.</div>';
+  }
+
+  analyticsCache = data;
+
+  const ctx = document.getElementById('analyticsChart');
+  const labels = Object.keys(shrinkByStore).sort();
+  const values = labels.map(store => shrinkByStore[store]);
+
+  if (analyticsChart) analyticsChart.destroy();
+
+  analyticsChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Shrink units by store',
+        data: values,
+        backgroundColor: 'rgba(220, 38, 38, 0.65)',
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {title: {display: true, text: 'Shrink (loss) by store'}}
+    }
+  });
+}
+
+function exportAnalytics() {
+  if (!analyticsCache.length) {
+    alert('No analytics data available to export.');
+    return;
+  }
+
+  const headers = ['store','shift','date','in_clerk','out_clerk','total_sales','total_shrink'];
+  const rows = analyticsCache.map(shift => {
+    const endData = shift.kratom_end || {};
+    const startData = shift.kratom_start || {};
+
+    const totalSales = Object.values(endData).reduce((s, p) => s + (p.sales || 0), 0);
+    let totalShrink = 0;
+    Object.keys(startData).forEach(key => {
+      const startProduct = startData[key] || {};
+      const endProduct = endData[key] || {ob:0,oc:0,fb:0,fc:0,sales:0};
+      const startQty = (startProduct.ob||0)+(startProduct.oc||0)+(startProduct.fb||0)+(startProduct.fc||0);
+      const endQty = (endProduct.ob||0)+(endProduct.oc||0)+(endProduct.fb||0)+(endProduct.fc||0);
+      const salesQty=(endProduct.sales||0);
+      totalShrink += (startQty-endQty-salesQty);
+    });
+
+    return [
+      shift.store,
+      shift.shift,
+      shift.date,
+      shift.in_clerk || '',
+      shift.out_clerk || '',
+      totalSales,
+      totalShrink.toFixed(2)
+    ];
+  });
+
+  const csvLines = [headers.join(','), ...rows.map(r => r.map(v => '"'+String(v).replace(/"/g,'""')+'"').join(','))];
+  const csvContent = csvLines.join('\n');
+  const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `shrink_analytics_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+
+buildStartKratomTable()
+renderEndKratomTable()
+
+document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
+
+document.getElementById('loginForm').addEventListener('submit',e=>{
+e.preventDefault()
+document.getElementById('loginScreen').classList.add('hidden')
+document.getElementById('appScreen').classList.remove('hidden')
+loadStartedShifts();
+})
+
+document.getElementById('addUserForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const name = document.getElementById('newName').value;
+  const username = document.getElementById('newUsername').value;
+  const password = document.getElementById('newPassword').value;
+  const role = document.getElementById('newRole').value;
+  // Assuming users table exists
+  const {error} = await sb.from('users').insert([{name, username, password, role}]);
+  if (error) alert(error.message);
+  else alert('User added');
+});
+
+})
+
+</script>
+
+</body>
+</html>
+```
